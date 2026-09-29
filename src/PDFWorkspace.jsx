@@ -15,27 +15,34 @@ const formatBytes = (bytes) => {
     units.length - 1
   );
 
-  return `${(bytes / Math.pow(1024, index)).toFixed(
+  return ${(bytes / Math.pow(1024, index)).toFixed(
     index === 0 ? 0 : 1
-  )} ${units[index]}`;
+  )} ${units[index]};
 };
 
 const makeId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  ${Date.now()}-${Math.random().toString(36).slice(2, 9)};
 
 async function readPDF(file) {
-  const buffer = await file.arrayBuffer();
+  const originalBuffer = await file.arrayBuffer();
+
+  // Give PDF.js its own copy so its worker cannot detach
+  // the bytes that we later need for pdf-lib.
+  const previewData = new Uint8Array(originalBuffer.slice(0));
 
   const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(buffer),
+    data: previewData,
   });
 
   const pdf = await loadingTask.promise;
 
+  // Keep a completely independent copy for pdf-lib.
+  const mergeBytes = new Uint8Array(originalBuffer.slice(0));
+
   return {
     id: makeId(),
     file,
-    buffer,
+    buffer: mergeBytes,
     name: file.name,
     size: file.size,
     pages: pdf.numPages,
