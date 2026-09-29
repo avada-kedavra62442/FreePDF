@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
+import { PDFDocument } from "pdf-lib";
 
 import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -9,11 +10,14 @@ const formatBytes = (bytes) => {
   if (!bytes) return "0 KB";
 
   const units = ["B", "KB", "MB", "GB"];
-  const index = Math.floor(Math.log(bytes) / Math.log(1024));
+  const index = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1
+  );
 
-  return `${(bytes / Math.pow(1024, index)).toFixed(index === 0 ? 0 : 1)} ${
-    units[index]
-  }`;
+  return `${(bytes / Math.pow(1024, index)).toFixed(
+    index === 0 ? 0 : 1
+  )} ${units[index]}`;
 };
 
 const makeId = () =>
@@ -108,7 +112,9 @@ export default function PDFWorkspace() {
   const [files, setFiles] = useState([]);
   const [dragging, setDragging] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(null);
 
   const addFiles = useCallback(async (incomingFiles) => {
     const selected = Array.from(incomingFiles || []);
@@ -125,6 +131,7 @@ export default function PDFWorkspace() {
     }
 
     setError("");
+    setSuccess(null);
     setLoading(true);
 
     try {
@@ -151,14 +158,11 @@ export default function PDFWorkspace() {
 
   const handleInput = async (event) => {
     await addFiles(event.target.files);
-
-    // Allows selecting the same file again later.
     event.target.value = "";
   };
 
   const handleDrop = async (event) => {
     event.preventDefault();
-
     setDragging(false);
 
     await addFiles(event.dataTransfer.files);
@@ -166,11 +170,13 @@ export default function PDFWorkspace() {
 
   const removeFile = (id) => {
     setFiles((current) => current.filter((item) => item.id !== id));
+    setSuccess(null);
   };
 
   const clearAll = () => {
     setFiles([]);
     setError("");
+    setSuccess(null);
   };
 
   const totalPages = files.reduce(
@@ -183,293 +189,519 @@ export default function PDFWorkspace() {
     0
   );
 
+  const mergePDFs = async () => {
+    if (files.length < 2) {
+      setError("Add at least two PDF files to merge them.");
+      return;
+    }
+
+    setError("");
+    setSuccess(null);
+    setProcessing(true);
+
+    try {
+      const mergedPdf = await PDFDocument.create();
+
+      for (const item of files) {
+        const sourcePdf = await PDFDocument.load(item.buffer);
+
+        const copiedPages = await mergedPdf.copyPages(
+          sourcePdf,
+          sourcePdf.getPageIndices()
+        );
+
+        copiedPages.forEach((page) => {
+          mergedPdf.addPage(page);
+        });
+      }
+
+      const mergedBytes = await mergedPdf.save();
+
+      const blob = new Blob([mergedBytes], {
+        type: "application/pdf",
+      });
+
+      const url = URL.createObjectURL(blob);
+
+      setSuccess({
+        url,
+        filename: "FreeToolz-Merged.pdf",
+        size: mergedBytes.byteLength,
+        pages: totalPages,
+      });
+    } catch (mergeError) {
+      console.error("PDF merge failed:", mergeError);
+
+      setError(
+        "FreePDF couldn't merge these files. One of the PDFs may be damaged, encrypted, or unsupported."
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const downloadResult = () => {
+    if (!success?.url) return;
+
+    const link = document.createElement("a");
+
+    link.href = success.url;
+    link.download = success.filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  const startAgain = () => {
+    if (success?.url) {
+      URL.revokeObjectURL(success.url);
+    }
+
+    setSuccess(null);
+    setError("");
+  };
+
   return (
-    <section className="freepdf-workspace" id="freepdf-workspace">
+    <section
+      className="freepdf-workspace"
+      id="freepdf-workspace"
+    >
       <div className="freepdf-workspace-orb freepdf-workspace-orb-one" />
       <div className="freepdf-workspace-orb freepdf-workspace-orb-two" />
 
       <div className="freepdf-workspace-inner">
-        <div className="freepdf-workspace-heading">
-          <div>
-            <div className="freepdf-eyebrow">
-              <span className="freepdf-eyebrow-dot" />
-              PRIVATE PDF WORKSPACE
-            </div>
 
-            <h2>
-              Drop your PDFs.
-              <br />
-              <span>Let's get to work.</span>
-            </h2>
-
-            <p>
-              Your files are opened directly in your browser. No account,
-              no watermark and no unnecessary upload step.
-            </p>
-          </div>
-
-          {files.length > 0 && (
-            <button
-              type="button"
-              className="freepdf-clear-button"
-              onClick={clearAll}
-            >
-              Clear workspace
-            </button>
-          )}
-        </div>
-
-        <div
-          className={`freepdf-dropzone ${
-            dragging ? "is-dragging" : ""
-          } ${files.length ? "has-files" : ""}`}
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setDragging(true);
-          }}
-          onDragOver={(event) => {
-            event.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={(event) => {
-            if (event.currentTarget === event.target) {
-              setDragging(false);
-            }
-          }}
-          onDrop={handleDrop}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="application/pdf,.pdf"
-            multiple
-            hidden
-            onChange={handleInput}
-          />
-
-          <div className="freepdf-upload-icon">
-            <div className="freepdf-upload-icon-inner">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 16V4" />
-                <path d="m7 9 5-5 5 5" />
-                <path d="M5 20h14" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="freepdf-upload-copy">
-            <h3>
-              {dragging
-                ? "Release to add your PDFs"
-                : "Drag & drop your PDFs here"}
-            </h3>
-
-            <p>
-              or choose files from your device
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="freepdf-browse-button"
-            onClick={() => inputRef.current?.click()}
-          >
-            Choose PDF files
-            <span>→</span>
-          </button>
-
-          <div className="freepdf-upload-meta">
-            <span>PDF only</span>
-            <i />
-            <span>Multiple files supported</span>
-            <i />
-            <span>Browser-side</span>
-          </div>
-
-          {loading && (
-            <div className="freepdf-loading">
-              <span className="freepdf-spinner" />
-              Reading your PDF...
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="freepdf-error">
-            <span>!</span>
-            {error}
-          </div>
-        )}
-
-        {files.length > 0 && (
+        {!success ? (
           <>
-            <div className="freepdf-stats">
-              <div className="freepdf-stat">
-                <strong>{files.length}</strong>
-                <span>PDF{files.length !== 1 ? "s" : ""}</span>
-              </div>
-
-              <div className="freepdf-stat-divider" />
-
-              <div className="freepdf-stat">
-                <strong>{totalPages}</strong>
-                <span>Pages</span>
-              </div>
-
-              <div className="freepdf-stat-divider" />
-
-              <div className="freepdf-stat">
-                <strong>{formatBytes(totalSize)}</strong>
-                <span>Total size</span>
-              </div>
-            </div>
-
-            <div className="freepdf-file-list">
-              {files.map((item, index) => (
-                <article className="freepdf-file-card" key={item.id}>
-                  <div className="freepdf-file-number">
-                    {String(index + 1).padStart(2, "0")}
-                  </div>
-
-                  <div className="freepdf-file-icon">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6" />
-                      <path d="M8 13h8" />
-                      <path d="M8 17h5" />
-                    </svg>
-                  </div>
-
-                  <div className="freepdf-file-info">
-                    <strong title={item.name}>
-                      {item.name}
-                    </strong>
-
-                    <span>
-                      {item.pages}{" "}
-                      {item.pages === 1 ? "page" : "pages"} ·{" "}
-                      {formatBytes(item.size)}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="freepdf-remove-file"
-                    onClick={() => removeFile(item.id)}
-                    aria-label={`Remove ${item.name}`}
-                  >
-                    ×
-                  </button>
-                </article>
-              ))}
-            </div>
-
-            <div className="freepdf-preview-shell">
-              <div className="freepdf-preview-header">
-                <div>
-                  <span className="freepdf-preview-label">
-                    LIVE PREVIEW
-                  </span>
-
-                  <h3>Pages in your workspace</h3>
+            <div className="freepdf-workspace-heading">
+              <div>
+                <div className="freepdf-eyebrow">
+                  <span className="freepdf-eyebrow-dot" />
+                  PRIVATE PDF WORKSPACE
                 </div>
 
-                <span className="freepdf-preview-count">
-                  {totalPages}{" "}
-                  {totalPages === 1 ? "page" : "pages"}
-                </span>
-              </div>
-
-              <div className="freepdf-pages-grid">
-                {files.flatMap((file) =>
-                  Array.from(
-                    { length: file.pages },
-                    (_, index) => (
-                      <div
-                        className="freepdf-page-card"
-                        key={`${file.id}-${index + 1}`}
-                      >
-                        <div className="freepdf-page-preview">
-                          <PDFThumbnail
-                            pdf={file.pdf}
-                            pageNumber={index + 1}
-                          />
-
-                          <div className="freepdf-page-glow" />
-                        </div>
-
-                        <div className="freepdf-page-footer">
-                          <span>
-                            Page {index + 1}
-                          </span>
-
-                          <span className="freepdf-page-source">
-                            {file.name}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  )
-                )}
-              </div>
-            </div>
-
-            <div className="freepdf-action-panel">
-              <div>
-                <span className="freepdf-preview-label">
-                  NEXT STEP
-                </span>
-
-                <h3>What do you want to do?</h3>
+                <h2>
+                  Drop your PDFs.
+                  <br />
+                  <span>Let's get to work.</span>
+                </h2>
 
                 <p>
-                  Your PDFs are loaded and ready. The editing
-                  actions will appear here as we build the
-                  FreePDF engine.
+                  Your files are opened directly in your browser.
+                  No account, no watermark and no unnecessary upload
+                  step.
                 </p>
               </div>
 
-              <div className="freepdf-action-grid">
-                <button type="button" className="freepdf-action-card">
-                  <span>Merge</span>
-                  <small>Combine PDFs</small>
-                  <b>→</b>
+              {files.length > 0 && (
+                <button
+                  type="button"
+                  className="freepdf-clear-button"
+                  onClick={clearAll}
+                >
+                  Clear workspace
                 </button>
+              )}
+            </div>
 
-                <button type="button" className="freepdf-action-card">
-                  <span>Split</span>
-                  <small>Separate pages</small>
-                  <b>→</b>
-                </button>
+            <div
+              className={`freepdf-dropzone ${
+                dragging ? "is-dragging" : ""
+              } ${files.length ? "has-files" : ""}`}
+              onDragEnter={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setDragging(true);
+              }}
+              onDragLeave={(event) => {
+                if (event.currentTarget === event.target) {
+                  setDragging(false);
+                }
+              }}
+              onDrop={handleDrop}
+            >
+              <input
+                ref={inputRef}
+                type="file"
+                accept="application/pdf,.pdf"
+                multiple
+                hidden
+                onChange={handleInput}
+              />
 
-                <button type="button" className="freepdf-action-card">
-                  <span>Extract</span>
-                  <small>Keep selected pages</small>
-                  <b>→</b>
-                </button>
+              <div className="freepdf-upload-icon">
+                <div className="freepdf-upload-icon-inner">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 16V4" />
+                    <path d="m7 9 5-5 5 5" />
+                    <path d="M5 20h14" />
+                  </svg>
+                </div>
+              </div>
 
-                <button type="button" className="freepdf-action-card">
-                  <span>Compress</span>
-                  <small>Reduce file size</small>
-                  <b>→</b>
-                </button>
+              <div className="freepdf-upload-copy">
+                <h3>
+                  {dragging
+                    ? "Release to add your PDFs"
+                    : "Drag & drop your PDFs here"}
+                </h3>
+
+                <p>
+                  or choose files from your device
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="freepdf-browse-button"
+                onClick={() => inputRef.current?.click()}
+              >
+                Choose PDF files
+                <span>→</span>
+              </button>
+
+              <div className="freepdf-upload-meta">
+                <span>PDF only</span>
+                <i />
+                <span>Multiple files supported</span>
+                <i />
+                <span>Browser-side</span>
+              </div>
+
+              {loading && (
+                <div className="freepdf-loading">
+                  <span className="freepdf-spinner" />
+                  Reading your PDF...
+                </div>
+              )}
+            </div>
+
+            {error && (
+              <div className="freepdf-error">
+                <span>!</span>
+                {error}
+              </div>
+            )}
+
+            {files.length > 0 && (
+              <>
+                <div className="freepdf-stats">
+                  <div className="freepdf-stat">
+                    <strong>{files.length}</strong>
+                    <span>
+                      PDF{files.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+
+                  <div className="freepdf-stat-divider" />
+
+                  <div className="freepdf-stat">
+                    <strong>{totalPages}</strong>
+                    <span>Pages</span>
+                  </div>
+
+                  <div className="freepdf-stat-divider" />
+
+                  <div className="freepdf-stat">
+                    <strong>
+                      {formatBytes(totalSize)}
+                    </strong>
+                    <span>Total size</span>
+                  </div>
+                </div>
+
+                <div className="freepdf-file-list">
+                  {files.map((item, index) => (
+                    <article
+                      className="freepdf-file-card"
+                      key={item.id}
+                    >
+                      <div className="freepdf-file-number">
+                        {String(index + 1).padStart(2, "0")}
+                      </div>
+
+                      <div className="freepdf-file-icon">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <path d="M14 2v6h6" />
+                          <path d="M8 13h8" />
+                          <path d="M8 17h5" />
+                        </svg>
+                      </div>
+
+                      <div className="freepdf-file-info">
+                        <strong title={item.name}>
+                          {item.name}
+                        </strong>
+
+                        <span>
+                          {item.pages}{" "}
+                          {item.pages === 1
+                            ? "page"
+                            : "pages"}{" "}
+                          · {formatBytes(item.size)}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="freepdf-remove-file"
+                        onClick={() =>
+                          removeFile(item.id)
+                        }
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        ×
+                      </button>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="freepdf-preview-shell">
+                  <div className="freepdf-preview-header">
+                    <div>
+                      <span className="freepdf-preview-label">
+                        LIVE PREVIEW
+                      </span>
+
+                      <h3>
+                        Pages in your workspace
+                      </h3>
+                    </div>
+
+                    <span className="freepdf-preview-count">
+                      {totalPages}{" "}
+                      {totalPages === 1
+                        ? "page"
+                        : "pages"}
+                    </span>
+                  </div>
+
+                  <div className="freepdf-pages-grid">
+                    {files.flatMap((file) =>
+                      Array.from(
+                        { length: file.pages },
+                        (_, index) => (
+                          <div
+                            className="freepdf-page-card"
+                            key={`${file.id}-${index + 1}`}
+                          >
+                            <div className="freepdf-page-preview">
+                              <PDFThumbnail
+                                pdf={file.pdf}
+                                pageNumber={index + 1}
+                              />
+
+                              <div className="freepdf-page-glow" />
+                            </div>
+
+                            <div className="freepdf-page-footer">
+                              <span>
+                                Page {index + 1}
+                              </span>
+
+                              <span className="freepdf-page-source">
+                                {file.name}
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div className="freepdf-action-panel">
+                  <div>
+                    <span className="freepdf-preview-label">
+                      PDF ACTIONS
+                    </span>
+
+                    <h3>
+                      What do you want to do?
+                    </h3>
+
+                    <p>
+                      Choose an operation for the PDFs
+                      currently in your workspace.
+                    </p>
+                  </div>
+
+                  <div className="freepdf-action-grid">
+
+                    <button
+                      type="button"
+                      className="freepdf-action-card freepdf-action-primary"
+                      onClick={mergePDFs}
+                      disabled={processing}
+                    >
+                      <span>Merge</span>
+                      <small>
+                        Combine your PDFs
+                      </small>
+                      <b>→</b>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="freepdf-action-card"
+                      disabled
+                    >
+                      <span>Split</span>
+                      <small>
+                        Coming next
+                      </small>
+                      <b>→</b>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="freepdf-action-card"
+                      disabled
+                    >
+                      <span>Extract</span>
+                      <small>
+                        Coming next
+                      </small>
+                      <b>→</b>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="freepdf-action-card"
+                      disabled
+                    >
+                      <span>Compress</span>
+                      <small>
+                        Coming next
+                      </small>
+                      <b>→</b>
+                    </button>
+
+                  </div>
+                </div>
+
+                {processing && (
+                  <div className="freepdf-processing">
+                    <div className="freepdf-processing-ring">
+                      <span />
+                    </div>
+
+                    <div>
+                      <strong>
+                        Merging your PDFs
+                      </strong>
+
+                      <p>
+                        Everything is being processed
+                        locally in your browser.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <div className="freepdf-success">
+
+            <div className="freepdf-success-orbit">
+              <div className="freepdf-success-check">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
               </div>
             </div>
-          </>
+
+            <span className="freepdf-preview-label">
+              OPERATION COMPLETE
+            </span>
+
+            <h2>
+              Your PDF is
+              <br />
+              <span>ready.</span>
+            </h2>
+
+            <p>
+              {success.pages} pages from {files.length} PDFs
+              were combined directly in your browser.
+            </p>
+
+            <div className="freepdf-result-card">
+
+              <div className="freepdf-result-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                  <path d="M8 13h8" />
+                  <path d="M8 17h5" />
+                </svg>
+              </div>
+
+              <div className="freepdf-result-info">
+                <strong>
+                  {success.filename}
+                </strong>
+
+                <span>
+                  {success.pages} pages ·{" "}
+                  {formatBytes(success.size)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="freepdf-download-button"
+                onClick={downloadResult}
+              >
+                Download
+                <span>↓</span>
+              </button>
+
+            </div>
+
+            <button
+              type="button"
+              className="freepdf-start-again"
+              onClick={startAgain}
+            >
+              ← Back to workspace
+            </button>
+
+          </div>
         )}
       </div>
     </section>
