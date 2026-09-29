@@ -3004,3 +3004,413 @@ a {
     display: none;
   }
 }
+
+/* =========================================================
+   FREEPDF — MERGE / PROCESS / SUCCESS STATES
+   ========================================================= */
+
+.freepdf-action-card:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.freepdf-action-card:disabled:hover {
+  transform: none;
+  border-color: rgba(203, 221, 214, 0.09);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.freepdf-action-primary {
+  border-color: rgba(110, 231, 183, 0.20);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(16, 185, 129, 0.11),
+      rgba(255, 255, 255, 0.035)
+    );
+}
+
+.freepdf-action-primary:not(:disabled):hover {
+  border-color: rgba(110, 231, 183, 0.42);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(16, 185, 129, 0.17),
+      rgba(255, 255, 255, 0.045)
+    );
+  box-shadow:
+    0 16px 40px rgba(16, 185, 129, 0.08);
+}
+
+.freepdf-processing {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 19px 22px;
+  border: 1px solid rgba(110, 231, 183, 0.14);
+  border-radius: 19px;
+  background:
+    linear-gradient(
+      110deg,
+      rgba(16, 185, 129, 0.07),
+      rgba(255, 255, 255, 0.025)
+    );
+  animation: freepdfProcessIn 0.35s ease both;
+}
+
+.freepdf-processing-ring {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(110, 231, 183, 0.14);
+  border-radius: 50%;
+}
+
+.freepdf-processing-ring::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  border-top-color: #78e8b8;
+  border-radius: 50%;
+  animation: freepdfSpin 0.85s linear infinite;
+}
+
+.freepdf-processing-ring span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #86edbd;
+  box-shadow: 0 0 15px rgba(134, 237, 189, 0.75);
+}
+
+.freepdf-processing strong {
+  display: block;
+  color: rgba(237, 247, 243, 0.88);
+  font-size: 14px;
+}
+
+.freepdf-processing p {
+  margin: 4px 0 0;
+  color: rgba(196, 218, 209, 0.42);
+  font-size: 11px;
+}
+
+.freepdf-success {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  overflow: hidden;
+}
+
+.freepdf-success::before,
+.freepdf-success::after {
+  content: "";
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(90px);
+}
+
+.freepdf-success::before {
+  top: 0;
+  left: -260px;
+  background: rgba(16, 185, 129, 0.11);
+}
+
+.freepdf-success::after {
+  right: -260px;
+  bottom: 0;
+  background: rgba(190, 205, 199, 0.055);
+}
+
+.freepdf-success > * {
+  position: relative;
+  z-index: 2;
+}
+
+.freepdf-success-orbit {
+  position: relative;
+  width: 105px;
+  height: 105px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 28px;
+  border: 1px solid rgba(110, 231, 183, 0.20);
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.035);
+  box-shadow:
+    0 0 70px rgba(16, 185, 129, 0.09),
+    inset 0 1px rgba(255, 255, 255, 0.10);
+}
+
+.freepdf-success-orbit::before {
+  content: "";
+  position: absolute;
+  inset: -13px;
+  border: 1px solid rgba(110, 231, 183, 0.08);
+  border-radius: 50%;
+  animation: freepdfSuccessOrbit 5s linear infinite;
+}
+
+.freepdf-success-orbit::after {
+  content: "";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a2f3cd;
+  box-shadow: 0 0 18px rgba(162, 243, 205, 0.8);
+}
+
+.freepdf-success-check {
+  width: 61px;
+  height: 61px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  color: #07110e;
+  background:
+    linear-gradient(
+      135deg,
+      #e0fff1,
+      #76e4b4 55%,
+      #bfc9c5
+    );
+  box-shadow:
+    0 18px 45px rgba(70, 220, 155, 0.15),
+    inset 0 1px rgba(255, 255, 255, 0.85);
+  animation: freepdfSuccessPop 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.freepdf-success-check svg {
+  width: 29px;
+  height: 29px;
+}
+
+.freepdf-success h2 {
+  margin: 13px 0 17px;
+  color: #f2f7f5;
+  font-size: clamp(45px, 7vw, 78px);
+  line-height: 0.95;
+  letter-spacing: -0.055em;
+}
+
+.freepdf-success h2 span {
+  background:
+    linear-gradient(
+      105deg,
+      #ffffff,
+      #9df0c8 55%,
+      #cbd4d1
+    );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.freepdf-success > p {
+  max-width: 500px;
+  margin: 0;
+  color: rgba(207, 224, 216, 0.55);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.freepdf-result-card {
+  width: min(650px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  margin-top: 35px;
+  padding: 15px;
+  text-align: left;
+  border: 1px solid rgba(208, 224, 218, 0.12);
+  border-radius: 21px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.065),
+      rgba(255, 255, 255, 0.022)
+    );
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, 0.08),
+    0 30px 80px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(25px);
+  animation: freepdfResultIn 0.55s 0.1s ease both;
+}
+
+.freepdf-result-icon {
+  width: 47px;
+  height: 47px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: #91e9bf;
+  background: rgba(16, 185, 129, 0.09);
+  border: 1px solid rgba(110, 231, 183, 0.13);
+}
+
+.freepdf-result-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.freepdf-result-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.freepdf-result-info strong {
+  display: block;
+  overflow: hidden;
+  color: rgba(240, 247, 244, 0.88);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.freepdf-result-info span {
+  display: block;
+  margin-top: 4px;
+  color: rgba(194, 216, 207, 0.42);
+  font-size: 10px;
+}
+
+.freepdf-download-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  padding: 12px 17px 12px 19px;
+  border: 1px solid rgba(201, 255, 230, 0.20);
+  border-radius: 999px;
+  color: #07110e;
+  background:
+    linear-gradient(
+      135deg,
+      #dfffee,
+      #76e4b4 55%,
+      #bdc8c4
+    );
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow:
+    0 12px 30px rgba(50, 205, 145, 0.13),
+    inset 0 1px rgba(255, 255, 255, 0.85);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.freepdf-download-button span {
+  font-size: 17px;
+}
+
+.freepdf-download-button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 17px 38px rgba(50, 205, 145, 0.20),
+    inset 0 1px rgba(255, 255, 255, 0.9);
+}
+
+.freepdf-start-again {
+  margin-top: 19px;
+  border: 0;
+  color: rgba(193, 222, 210, 0.52);
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.freepdf-start-again:hover {
+  color: rgba(221, 243, 235, 0.86);
+}
+
+@keyframes freepdfProcessIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes freepdfSuccessPop {
+  from {
+    opacity: 0;
+    transform: scale(0.65) rotate(-10deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes freepdfResultIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes freepdfSuccessOrbit {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .freepdf-success {
+    min-height: 550px;
+    padding: 60px 10px;
+  }
+
+  .freepdf-result-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .freepdf-result-info {
+    padding-top: 4px;
+  }
+
+  .freepdf-download-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .freepdf-processing {
+    align-items: flex-start;
+  }
+}
