@@ -2,163 +2,217 @@ import {
   ArrowRight,
   FileArchive,
   FileImage,
-  FileOutput,
   FilePlus2,
   Files,
   LockKeyhole,
   Menu,
   Scissors,
   ShieldCheck,
-  Sparkles,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const tools = [
   {
     icon: FilePlus2,
     title: "Merge PDF",
-    description: "Combine multiple PDF files into one document.",
+    description: "Combine multiple PDFs into one.",
     category: "Organize",
   },
   {
     icon: Scissors,
     title: "Split PDF",
-    description: "Separate pages or ranges into individual PDFs.",
+    description: "Split pages into separate PDFs.",
     category: "Organize",
   },
   {
     icon: Files,
     title: "Organize PDF",
-    description: "Reorder, rotate, delete and extract pages.",
+    description: "Reorder, rotate or delete pages.",
     category: "Organize",
   },
   {
     icon: FileArchive,
     title: "Compress PDF",
-    description: "Reduce PDF size while keeping it useful.",
+    description: "Reduce PDF file size.",
     category: "Optimize",
   },
   {
     icon: FileImage,
     title: "PDF to JPG",
-    description: "Turn PDF pages into downloadable images.",
+    description: "Convert PDF pages to images.",
     category: "Convert",
   },
   {
-    icon: FileOutput,
+    icon: FilePlus2,
     title: "JPG to PDF",
-    description: "Turn images into a clean PDF document.",
+    description: "Turn images into a PDF.",
     category: "Convert",
   },
   {
     icon: LockKeyhole,
     title: "Protect PDF",
-    description: "Add password protection to your document.",
+    description: "Password-protect a PDF.",
     category: "Security",
   },
   {
-    icon: Sparkles,
-    title: "More PDF Tools",
-    description: "More useful PDF utilities are coming.",
-    category: "More",
+    icon: ShieldCheck,
+    title: "Sign PDF",
+    description: "Add a signature to your document.",
+    category: "Security",
   },
 ];
 
 function App() {
+  const inputRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
-  const scrollToTools = () => {
-    document.getElementById("tools")?.scrollIntoView({
-      behavior: "smooth",
-    });
-    setMenuOpen(false);
+  const handleFiles = (event) => {
+    const files = Array.from(event.target.files || []).filter(
+      (file) => file.type === "application/pdf"
+    );
+
+    setSelectedFiles(files);
+  };
+
+  const openPicker = () => {
+    inputRef.current?.click();
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles((files) => files.filter((_, i) => i !== index));
   };
 
   return (
     <div className="app">
       <header className="navbar">
-        <a className="brand" href="#top" aria-label="FreePDF home">
-          <span className="brand-mark">
-            <FileOutput size={21} strokeWidth={2.4} />
-          </span>
-
-          <span className="brand-name">FreePDF</span>
+        <a className="brand" href="#top">
+          <span className="brand-mark">F</span>
+          <span>FreePDF</span>
         </a>
 
-        <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
-          <button onClick={scrollToTools}>Tools</button>
-          <a href="#privacy" onClick={() => setMenuOpen(false)}>
-            Privacy
+        <nav className={menuOpen ? "nav-links open" : "nav-links"}>
+          <a href="#tools" onClick={() => setMenuOpen(false)}>
+            PDF Tools
           </a>
           <a href="#about" onClick={() => setMenuOpen(false)}>
             About
+          </a>
+          <a href="#privacy" onClick={() => setMenuOpen(false)}>
+            Privacy
           </a>
         </nav>
 
         <button
           className="mobile-menu"
           onClick={() => setMenuOpen((value) => !value)}
-          aria-label="Toggle navigation"
+          aria-label="Open menu"
         >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
       </header>
 
       <main id="top">
         <section className="hero">
-          <div className="hero-badge">
-            <ShieldCheck size={16} />
-            Private by design
-          </div>
-
-          <h1>
-            Your PDF.
-            <br />
-            <span>Your control.</span>
-          </h1>
-
-          <p className="hero-description">
-            Free PDF tools without ads, watermarks, forced accounts or
-            artificial daily limits.
-          </p>
-
-          <div className="hero-actions">
-            <button className="primary-button" onClick={scrollToTools}>
-              Explore PDF tools
-              <ArrowRight size={18} />
-            </button>
-          </div>
-
-          <div className="trust-row">
-            <span>
+          <div className="hero-copy">
+            <div className="eyebrow">
               <ShieldCheck size={15} />
-              Browser-first
-            </span>
+              Free PDF tools • No account required
+            </div>
 
-            <span>
-              <FilePlus2 size={15} />
-              No watermark
-            </span>
+            <h1>
+              Everything you need
+              <br />
+              <span>to work with PDFs.</span>
+            </h1>
 
-            <span>
-              <LockKeyhole size={15} />
-              No forced account
-            </span>
+            <p>
+              Merge, split, compress, convert and organize your PDFs.
+              No ads. No watermark. No unnecessary signup.
+            </p>
           </div>
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            multiple
+            hidden
+            onChange={handleFiles}
+          />
+
+          <div className="dropzone">
+            <div className="drop-icon">
+              <FilePlus2 size={30} />
+            </div>
+
+            <h2>
+              {selectedFiles.length
+                ? `${selectedFiles.length} PDF${
+                    selectedFiles.length === 1 ? "" : "s"
+                  } selected`
+                : "Drop your PDFs here"}
+            </h2>
+
+            <p>
+              {selectedFiles.length
+                ? "Your files are ready to use."
+                : "or choose files from your device"}
+            </p>
+
+            <button className="choose-button" onClick={openPicker}>
+              {selectedFiles.length ? "Add more PDFs" : "Choose PDF files"}
+            </button>
+
+            <small>
+              Files are handled in your browser whenever possible.
+            </small>
+          </div>
+
+          {selectedFiles.length > 0 && (
+            <div className="selected-files">
+              {selectedFiles.map((file, index) => (
+                <div className="file-row" key={`${file.name}-${index}`}>
+                  <div className="file-info">
+                    <span className="file-symbol">
+                      <FileImage size={17} />
+                    </span>
+
+                    <span>
+                      <strong>{file.name}</strong>
+                      <small>
+                        {(file.size / 1024 / 1024).toFixed(2)} MB
+                      </small>
+                    </span>
+                  </div>
+
+                  <button
+                    className="remove-file"
+                    onClick={() => removeFile(index)}
+                    aria-label={`Remove ${file.name}`}
+                  >
+                    <X size={17} />
+                  </button>
+                </div>
+              ))}
+
+              <button className="continue-button">
+                Continue
+                <ArrowRight size={18} />
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="tools-section" id="tools">
-          <div className="section-heading">
+          <div className="section-top">
             <div>
-              <p className="eyebrow">PDF TOOLKIT</p>
-              <h2>Everything you actually need.</h2>
+              <span className="section-label">PDF TOOLKIT</span>
+              <h2>Pick a tool.</h2>
             </div>
 
-            <p>
-              Simple tools for everyday PDF work, designed around privacy
-              rather than subscriptions.
-            </p>
+            <span className="tool-count">8 tools available</span>
           </div>
 
           <div className="tools-grid">
@@ -168,94 +222,46 @@ function App() {
               return (
                 <button className="tool-card" key={tool.title}>
                   <span className="tool-icon">
-                    <Icon size={22} />
+                    <Icon size={21} />
                   </span>
 
-                  <span className="tool-category">{tool.category}</span>
-
-                  <span className="tool-title">{tool.title}</span>
-
-                  <span className="tool-description">
-                    {tool.description}
+                  <span className="tool-content">
+                    <span className="tool-category">{tool.category}</span>
+                    <strong>{tool.title}</strong>
+                    <span>{tool.description}</span>
                   </span>
 
-                  <span className="tool-arrow">
-                    <ArrowRight size={17} />
-                  </span>
+                  <ArrowRight className="tool-arrow" size={18} />
                 </button>
               );
             })}
           </div>
         </section>
 
-        <section className="principles" id="privacy">
-          <div className="principles-copy">
-            <p className="eyebrow">THE FREEPDF PROMISE</p>
-
-            <h2>
-              Useful software shouldn't need
-              <span> an upgrade button.</span>
-            </h2>
-
+        <section className="info-grid">
+          <div className="info-card" id="privacy">
+            <ShieldCheck size={24} />
+            <h3>Privacy first</h3>
             <p>
-              FreePDF is designed around a simple idea: if a task can safely
-              happen in your browser, it should not need to be uploaded to a
-              server just to process it.
+              We design FreePDF around browser-side processing wherever
+              practical, so simple PDF tasks don't need an unnecessary upload.
             </p>
           </div>
 
-          <div className="principles-list">
-            <div>
-              <ShieldCheck size={20} />
-              <span>
-                <strong>Local-first</strong>
-                <small>
-                  Browser processing whenever the technology allows it.
-                </small>
-              </span>
-            </div>
-
-            <div>
-              <Files size={20} />
-              <span>
-                <strong>No artificial limits</strong>
-                <small>
-                  No fake “3 files today” barrier built into the product.
-                </small>
-              </span>
-            </div>
-
-            <div>
-              <LockKeyhole size={20} />
-              <span>
-                <strong>No forced account</strong>
-                <small>
-                  You should be able to use a PDF tool without creating a
-                  profile.
-                </small>
-              </span>
-            </div>
+          <div className="info-card" id="about">
+            <Files size={24} />
+            <h3>Actually free</h3>
+            <p>
+              No forced account, no watermark and no artificial “3 files
+              today” restriction.
+            </p>
           </div>
-        </section>
-
-        <section className="about-section" id="about">
-          <p className="eyebrow">ABOUT FREEPDF</p>
-          <h2>Built to be useful.</h2>
-          <p>
-            FreePDF is part of a larger collection of free browser-first
-            utilities. The goal is straightforward: make useful tools
-            accessible without turning every simple task into a subscription.
-          </p>
         </section>
       </main>
 
       <footer className="footer">
-        <div>
-          <strong>FreePDF</strong>
-          <span>Free tools. No nonsense.</span>
-        </div>
-
-        <span>Built for people, not subscriptions.</span>
+        <strong>FreePDF</strong>
+        <span>Useful PDF tools without the usual nonsense.</span>
       </footer>
     </div>
   );
