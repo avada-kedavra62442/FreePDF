@@ -15,13 +15,13 @@ const formatBytes = (bytes) => {
     units.length - 1
   );
 
-  return ${(bytes / Math.pow(1024, index)).toFixed(
+  return `${(bytes / Math.pow(1024, index)).toFixed(
     index === 0 ? 0 : 1
-  )} ${units[index]};
+  )} ${units[index]}`;
 };
 
 const makeId = () =>
-  ${Date.now()}-${Math.random().toString(36).slice(2, 9)};
+  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 async function readPDF(file) {
   const originalBuffer = await file.arrayBuffer();
