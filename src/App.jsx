@@ -1,783 +1,771 @@
-import { useRef, useState } from "react";
-import {
-  ArrowDownRight,
-  ArrowRight,
-  Check,
-  ChevronDown,
-  FileArchive,
-  FileImage,
-  FilePenLine,
-  FilePlus2,
-  FileStack,
-  FileText,
-  FolderOpen,
-  LockKeyhole,
-  Menu,
-  Minimize2,
-  MoveRight,
-  ScanText,
-  ShieldCheck,
-  Sparkles,
-  Upload,
-  X,
-} from "lucide-react";
+import React, { useRef, useState } from "react";
 import "./styles.css";
 
-const majorTools = [
+const tools = [
   {
-    title: "Merge PDF",
-    description: "Combine multiple PDFs into one document.",
-    icon: FileStack,
+    name: "FreePDF",
+    desc: "Merge, split, compress and transform PDFs.",
+    icon: "PDF",
+    active: true,
   },
   {
-    title: "Compress PDF",
-    description: "Reduce file size while keeping quality.",
-    icon: Minimize2,
+    name: "FreeImage",
+    desc: "Resize, compress, convert and clean images.",
+    icon: "IMG",
   },
   {
-    title: "Split PDF",
-    description: "Extract the pages you actually need.",
-    icon: FilePlus2,
+    name: "FreeConvert",
+    desc: "Convert files between useful everyday formats.",
+    icon: "↗",
+  },
+];
+
+const faqs = [
+  {
+    q: "Is FreePDF actually free?",
+    a: "Yes. FreePDF is designed around genuinely useful tools without subscriptions, forced accounts, watermarks or artificial daily-use limits.",
+  },
+  {
+    q: "Do I need to create an account?",
+    a: "No. You can use the PDF workspace without creating an account. We want the tool to be useful first and ask for as little information as possible.",
+  },
+  {
+    q: "What can I do with my PDF?",
+    a: "The workspace is designed to support everyday PDF tasks such as merging, splitting, rearranging, extracting, compressing and converting pages.",
+  },
+  {
+    q: "Are my files uploaded somewhere?",
+    a: "Where a task can be performed directly in your browser, FreeToolz aims to keep that processing local. The exact processing method depends on the tool and operation.",
+  },
+  {
+    q: "Will my PDF have a watermark?",
+    a: "No. FreeToolz is not built around putting a watermark on your exported files and then asking you to pay to remove it.",
+  },
+  {
+    q: "Will more tools be added?",
+    a: "Yes. FreePDF is the first part of the wider FreeToolz ecosystem, with image, video, conversion, QR, OCR, developer and other practical tools planned.",
   },
 ];
 
 function App() {
-  const fileInput = useRef(null);
-  const [files, setFiles] = useState([]);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [files, setFiles] = useState([]);
+  const [dragging, setDragging] = useState(false);
+  const [openFaq, setOpenFaq] = useState(null);
+  const fileInput = useRef(null);
 
-  const chooseFiles = () => fileInput.current?.click();
-
-  const handleFiles = (event) => {
-    const incoming = Array.from(event.target.files || []);
-
-    const pdfs = incoming.filter(
+  const addFiles = (incoming) => {
+    const pdfs = Array.from(incoming || []).filter(
       (file) =>
         file.type === "application/pdf" ||
         file.name.toLowerCase().endsWith(".pdf")
     );
 
-    setFiles((current) => [...current, ...pdfs]);
-    event.target.value = "";
+    setFiles((current) => {
+      const existing = new Set(
+        current.map((file) => `${file.name}-${file.size}`)
+      );
+
+      return [
+        ...current,
+        ...pdfs.filter((file) => !existing.has(`${file.name}-${file.size}`)),
+      ];
+    });
   };
 
   const removeFile = (index) => {
     setFiles((current) => current.filter((_, i) => i !== index));
   };
 
-  const clearFiles = () => setFiles([]);
-
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
-
-    setMenuOpen(false);
+    setMobileOpen(false);
     setToolsOpen(false);
   };
 
-  return (
-    <div className="site">
-      <div className="noise" />
+  const formatSize = (bytes) => {
+    if (!bytes) return "0 KB";
+    if (bytes < 1024 * 1024) {
+      return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
+  return (
+    <div className="site-shell">
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
       <div className="ambient ambient-three" />
 
-      {/* NAVIGATION */}
-      <header className="nav-shell">
-        <nav className="nav glass-panel">
-          <button className="brand" onClick={() => scrollTo("top")}>
+      {/* NAVBAR */}
+      <header className="site-header">
+        <nav className="navbar glass-panel">
+          <button
+            className="brand"
+            onClick={() => scrollTo("top")}
+            aria-label="FreeToolz home"
+          >
             <span className="brand-mark">
-              <span />
-              <span />
-              <span />
+              <span className="brand-mark-inner">F</span>
             </span>
 
-            <span className="brand-name">FreePDF</span>
+            <span className="brand-name">
+              Free<span>Toolz</span>
+            </span>
           </button>
 
-          <div className={`nav-links ${menuOpen ? "open" : ""}`}>
-            {/* TOOLS DROPDOWN */}
-            <div
-              className={`tools-menu ${toolsOpen ? "active" : ""}`}
-              onMouseEnter={() => setToolsOpen(true)}
-              onMouseLeave={() => setToolsOpen(false)}
-            >
+          <div className={`nav-links ${mobileOpen ? "nav-open" : ""}`}>
+            <div className="nav-dropdown-wrap">
               <button
-                className="tools-menu-trigger"
+                className={`nav-link tools-trigger ${
+                  toolsOpen ? "active" : ""
+                }`}
                 onClick={() => setToolsOpen((value) => !value)}
               >
                 Tools
-                <ChevronDown size={14} />
+                <span className={`chevron ${toolsOpen ? "rotated" : ""}`}>
+                  ↓
+                </span>
               </button>
 
-              <div className="tools-dropdown glass-panel">
-                <div className="dropdown-heading">
-                  <span>ESSENTIAL TOOLS</span>
-                  <small>03</small>
-                </div>
+              {toolsOpen && (
+                <div className="tools-dropdown glass-panel">
+                  <div className="dropdown-heading">
+                    <span>EXPLORE</span>
+                    <small>FreeToolz ecosystem</small>
+                  </div>
 
-                {majorTools.map((tool) => {
-                  const Icon = tool.icon;
-
-                  return (
+                  {tools.map((tool) => (
                     <button
-                      key={tool.title}
-                      className="dropdown-tool"
-                      onClick={chooseFiles}
+                      className={`dropdown-item ${
+                        tool.active ? "dropdown-active" : ""
+                      }`}
+                      key={tool.name}
+                      onClick={() => {
+                        if (tool.active) scrollTo("workspace");
+                      }}
                     >
-                      <span className="dropdown-tool-icon">
-                        <Icon size={17} />
+                      <span className="dropdown-icon">{tool.icon}</span>
+                      <span>
+                        <strong>{tool.name}</strong>
+                        <small>{tool.desc}</small>
                       </span>
-
-                      <span className="dropdown-tool-copy">
-                        <strong>{tool.title}</strong>
-                        <small>{tool.description}</small>
-                      </span>
-
-                      <ArrowRight size={15} />
+                      <span className="dropdown-arrow">↗</span>
                     </button>
-                  );
-                })}
-              </div>
+                  ))}
+
+                  <div className="dropdown-footer">
+                    More FreeToolz products are on the way.
+                  </div>
+                </div>
+              )}
             </div>
 
-            <button onClick={() => scrollTo("experience")}>
+            <button className="nav-link" onClick={() => scrollTo("how")}>
               How it works
             </button>
 
-            <button onClick={() => scrollTo("privacy")}>
+            <button className="nav-link" onClick={() => scrollTo("privacy")}>
               Privacy
             </button>
 
-            <button onClick={() => scrollTo("faq")}>FAQ</button>
+            <button className="nav-link" onClick={() => scrollTo("faq")}>
+              FAQ
+            </button>
           </div>
 
-          <button className="nav-action" onClick={chooseFiles}>
-            Open PDF
-            <ArrowUpRightIcon />
+          <button
+            className="nav-cta"
+            onClick={() => scrollTo("workspace")}
+          >
+            <span>Open PDF</span>
+            <span className="cta-arrow">↗</span>
           </button>
 
           <button
-            className="mobile-menu"
-            aria-label="Open menu"
-            onClick={() => setMenuOpen((value) => !value)}
+            className={`mobile-toggle ${mobileOpen ? "is-open" : ""}`}
+            onClick={() => setMobileOpen((value) => !value)}
+            aria-label="Toggle navigation"
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            <span />
+            <span />
           </button>
         </nav>
       </header>
 
       <main id="top">
-
-        {/* =========================================================
-            01 — HERO
-        ========================================================= */}
-
+        {/* HERO */}
         <section className="hero section">
-          <div className="hero-grid" />
-
           <div className="hero-copy reveal">
             <div className="eyebrow">
               <span className="status-dot" />
-              PDF tools, redesigned
+              FREE PDF TOOLS · NO NONSENSE
             </div>
 
             <h1>
               PDFs.
               <br />
-              <span className="silver-text">Without</span>{" "}
-              <span className="emerald-text">the nonsense.</span>
+              <span className="gradient-text">Without the nonsense.</span>
             </h1>
 
             <p className="hero-description">
-              A beautifully simple collection of PDF tools designed to get
-              things done — without subscriptions, watermarks or unnecessary
-              friction.
+              Merge, split, compress and transform your PDFs with a clean,
+              focused workspace built to get the job done.
             </p>
 
-            <div className="hero-buttons">
-              <button className="primary-button" onClick={chooseFiles}>
-                <Upload size={18} />
-                Drop a PDF
-                <span className="button-shine" />
+            <div className="hero-actions">
+              <button
+                className="primary-button"
+                onClick={() => scrollTo("workspace")}
+              >
+                <span>Get started</span>
+                <span>↗</span>
               </button>
 
               <button
                 className="secondary-button"
-                onClick={() => scrollTo("start")}
+                onClick={() => scrollTo("how")}
               >
-                Get started
-                <ArrowDownRight size={18} />
+                See how it works
+                <span>↓</span>
               </button>
             </div>
 
-            <div className="hero-trust">
-              <span>
-                <Check size={14} /> No account
-              </span>
-
-              <span>
-                <Check size={14} /> No watermark
-              </span>
-
-              <span>
-                <Check size={14} /> No ads
-              </span>
+            <div className="trust-row">
+              <span>NO ACCOUNT</span>
+              <i />
+              <span>NO WATERMARK</span>
+              <i />
+              <span>NO PAYWALL</span>
             </div>
           </div>
 
           <div className="hero-visual">
-            <div className="orbital orbital-a" />
-            <div className="orbital orbital-b" />
+            <div className="orbit orbit-one" />
+            <div className="orbit orbit-two" />
+            <div className="orbit orbit-three" />
 
-            <div className="pdf-stack">
-              <div className="floating-page page-back">
-                <div className="page-lines">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
+            <div className="hero-glow" />
+
+            <div className="pdf-card">
+              <div className="pdf-card-top">
+                <span>FREEPDF</span>
+                <span className="mini-status">READY</span>
               </div>
 
-              <div className="floating-page page-middle">
-                <div className="page-top">
-                  <span>PDF</span>
-                  <FileText size={21} />
-                </div>
-
-                <div className="page-lines">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </div>
+              <div className="pdf-symbol">
+                <span>PDF</span>
               </div>
 
-              <div className="floating-page page-front">
-                <div className="pdf-symbol">
-                  <FileText size={38} />
-                </div>
+              <div className="pdf-lines">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
 
-                <strong>PDF</strong>
-                <small>READY WHEN YOU ARE</small>
+              <div className="pdf-card-bottom">
+                <span>YOUR FILE</span>
+                <span>01 / 01</span>
               </div>
             </div>
 
-            <div className="floating-chip chip-one glass-panel">
-              <ShieldCheck size={17} />
-              <span>Privacy first</span>
+            <div className="floating-chip chip-one">
+              <span className="chip-icon">✓</span>
+              <span>
+                <strong>Private</strong>
+                <small>Browser-first</small>
+              </span>
             </div>
 
-            <div className="floating-chip chip-two glass-panel">
-              <Sparkles size={17} />
-              <span>Simple by design</span>
+            <div className="floating-chip chip-two">
+              <span className="chip-icon">↗</span>
+              <span>
+                <strong>Simple</strong>
+                <small>No account needed</small>
+              </span>
             </div>
 
-            <div className="hero-ring" />
-          </div>
-
-          <div className="scroll-cue">
-            <span>SCROLL TO EXPLORE</span>
-            <span className="scroll-line" />
+            <div className="floating-chip chip-three">
+              <span>01</span>
+              <strong>DROP PDF</strong>
+            </div>
           </div>
         </section>
 
         {/* MARQUEE */}
-
-        <section className="marquee-section">
+        <div className="marquee-wrap">
           <div className="marquee">
             <span>MERGE</span>
             <b>✦</b>
-            <span>COMPRESS</span>
+            <span>SPLIT</span>
             <b>✦</b>
-            <span>ORGANIZE</span>
+            <span>COMPRESS</span>
             <b>✦</b>
             <span>CONVERT</span>
             <b>✦</b>
-            <span>SIGN</span>
+            <span>REARRANGE</span>
             <b>✦</b>
-            <span>PROTECT</span>
+            <span>EXTRACT</span>
             <b>✦</b>
             <span>MERGE</span>
             <b>✦</b>
+            <span>SPLIT</span>
+            <b>✦</b>
             <span>COMPRESS</span>
+            <b>✦</b>
+            <span>CONVERT</span>
           </div>
-        </section>
+        </div>
 
-        {/* =========================================================
-            02 — GET STARTED
-        ========================================================= */}
-
-        <section id="start" className="workspace-section section">
-          <div className="workspace-copy">
-            <div className="section-label">02 / GET STARTED</div>
+        {/* 02 GET STARTED */}
+        <section className="workspace-section section" id="workspace">
+          <div className="section-heading">
+            <div>
+              <span className="section-number">02</span>
+              <span className="section-kicker">GET STARTED</span>
+            </div>
 
             <h2>
-              Start with
+              Your PDF workspace.
               <br />
-              <span>your document.</span>
+              <span>Nothing in the way.</span>
             </h2>
 
             <p>
-              Drop a PDF into your workspace and choose what happens next.
-              No maze of menus. No clutter.
+              Drop one or more PDF files here and start building your workflow.
+              The interface stays simple so the actual work stays fast.
             </p>
-
-            <div className="workspace-mini-points">
-              <span>
-                <Check size={14} />
-                Multiple PDFs
-              </span>
-
-              <span>
-                <Check size={14} />
-                Browser-first
-              </span>
-
-              <span>
-                <Check size={14} />
-                No account
-              </span>
-            </div>
           </div>
 
-          <div className="workspace-shell glass-panel">
-            <div className="workspace-top">
-              <div className="window-dots">
-                <i />
-                <i />
-                <i />
+          <div
+            className={`workspace glass-panel ${
+              dragging ? "is-dragging" : ""
+            }`}
+            onDragOver={(event) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(event) => {
+              event.preventDefault();
+              setDragging(false);
+              addFiles(event.dataTransfer.files);
+            }}
+          >
+            <div className="workspace-topbar">
+              <div className="window-controls">
+                <span />
+                <span />
+                <span />
               </div>
 
-              <span>FREEPDF / WORKSPACE</span>
+              <div className="workspace-title">
+                FREEPDF <span>/</span> WORKSPACE
+              </div>
 
-              <span className="workspace-status">
-                <i /> READY
-              </span>
+              <div className="workspace-status">
+                <span className="status-dot" />
+                READY
+              </div>
             </div>
 
-            <div
-              className={`drop-zone ${files.length ? "has-files" : ""}`}
-              onClick={chooseFiles}
-            >
-              <input
-                ref={fileInput}
-                type="file"
-                accept="application/pdf,.pdf"
-                multiple
-                hidden
-                onChange={handleFiles}
-              />
+            {files.length === 0 ? (
+              <div className="drop-zone">
+                <div className="drop-icon">
+                  <span>+</span>
+                </div>
 
-              {!files.length ? (
-                <>
-                  <div className="drop-icon">
-                    <FolderOpen size={28} />
-                  </div>
+                <h3>Drop your PDF here</h3>
 
-                  <h3>Drop your PDF here</h3>
+                <p>
+                  or choose a file from your device
+                </p>
 
-                  <p>or click to browse your device</p>
-
-                  <div className="drop-meta">
-                    <span>PDF</span>
-                    <span>•</span>
-                    <span>Multiple files supported</span>
-                  </div>
-                </>
-              ) : (
-                <div
-                  className="file-list"
-                  onClick={(event) => event.stopPropagation()}
+                <button
+                  className="upload-button"
+                  onClick={() => fileInput.current?.click()}
                 >
-                  <div className="file-list-header">
-                    <div>
-                      <strong>
-                        {files.length} PDF{files.length > 1 ? "s" : ""}
-                      </strong>
+                  Choose PDF
+                  <span>↗</span>
+                </button>
 
-                      <span>Ready in workspace</span>
-                    </div>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  multiple
+                  hidden
+                  onChange={(event) => addFiles(event.target.files)}
+                />
 
-                    <button onClick={clearFiles}>Clear all</button>
+                <div className="drop-meta">
+                  <span>PDF ONLY</span>
+                  <i />
+                  <span>MULTIPLE FILES</span>
+                  <i />
+                  <span>NO ACCOUNT</span>
+                </div>
+              </div>
+            ) : (
+              <div className="file-workspace">
+                <div className="file-workspace-header">
+                  <div>
+                    <span className="small-label">SELECTED FILES</span>
+                    <h3>
+                      {files.length} PDF{files.length !== 1 ? "s" : ""} ready
+                    </h3>
                   </div>
 
+                  <button
+                    className="add-more"
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    + Add more
+                  </button>
+                </div>
+
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  multiple
+                  hidden
+                  onChange={(event) => addFiles(event.target.files)}
+                />
+
+                <div className="file-list">
                   {files.map((file, index) => (
-                    <div
-                      className="file-row"
-                      key={`${file.name}-${index}`}
-                    >
-                      <div className="file-icon">
-                        <FileText size={18} />
+                    <div className="file-row" key={`${file.name}-${index}`}>
+                      <div className="file-number">
+                        {String(index + 1).padStart(2, "0")}
                       </div>
 
-                      <div className="file-info">
+                      <div className="file-type">PDF</div>
+
+                      <div className="file-details">
                         <strong>{file.name}</strong>
-                        <span>{formatBytes(file.size)}</span>
+                        <span>{formatSize(file.size)}</span>
                       </div>
+
+                      <div className="file-ready">READY</div>
 
                       <button
                         className="remove-file"
                         onClick={() => removeFile(index)}
+                        aria-label={`Remove ${file.name}`}
                       >
-                        <X size={16} />
+                        ×
                       </button>
                     </div>
                   ))}
+                </div>
+
+                <div className="workspace-actions">
+                  <button className="workspace-main-action">
+                    Choose an action
+                    <span>↓</span>
+                  </button>
 
                   <button
-                    className="continue-button"
-                    onClick={chooseFiles}
+                    className="clear-button"
+                    onClick={() => setFiles([])}
                   >
-                    Add another PDF
-                    <ArrowRight size={16} />
+                    Clear
                   </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* =========================================================
-            03 — HOW IT WORKS
-        ========================================================= */}
+        {/* HOW IT WORKS */}
+        <section className="how-section section" id="how">
+          <div className="section-heading split-heading">
+            <div>
+              <span className="section-number">03</span>
+              <span className="section-kicker">THE EXPERIENCE</span>
+            </div>
 
-        <section id="experience" className="experience-section section">
-          <div className="section-label">03 / THE EXPERIENCE</div>
-
-          <div className="experience-title">
             <h2>
-              Simple is
+              Three steps.
               <br />
-              <span>powerful.</span>
+              <span>That's it.</span>
             </h2>
           </div>
 
-          <div className="experience-stage">
-            <div className="experience-line line-one" />
-            <div className="experience-line line-two" />
+          <div className="steps-grid">
+            <article className="step-card">
+              <div className="step-top">
+                <span>01</span>
+                <span>INPUT</span>
+              </div>
 
-            <div className="experience-card card-left glass-panel">
-              <span>01</span>
-              <FileArchive size={28} />
-
-              <h3>Choose</h3>
-
-              <p>
-                Drop in your document.
-                <br />
-                That's it.
-              </p>
-            </div>
-
-            <div className="experience-card card-center glass-panel">
-              <span>02</span>
-              <Sparkles size={28} />
-
-              <h3>Transform</h3>
-
-              <p>
-                Pick the tool that
-                <br />
-                gets the job done.
-              </p>
-            </div>
-
-            <div className="experience-card card-right glass-panel">
-              <span>03</span>
-              <MoveRight size={28} />
-
-              <h3>Done</h3>
-
-              <p>
-                Download your
-                <br />
-                finished document.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* =========================================================
-            04 — PRIVACY
-        ========================================================= */}
-
-        <section id="privacy" className="privacy-section section">
-          <div className="privacy-orb" />
-
-          <div className="section-label">04 / YOUR DOCUMENTS</div>
-
-          <div className="privacy-layout">
-            <h2>
-              Your files.
-              <br />
-              <span>Your business.</span>
-            </h2>
-
-            <div className="privacy-content">
-              <p>
-                FreePDF is designed around a simple principle: documents
-                belong to the person using them. Wherever practical, processing
-                should happen directly in your browser instead of sending
-                files somewhere else.
-              </p>
-
-              <div className="privacy-points">
-                <div>
-                  <ShieldCheck size={21} />
-
-                  <span>
-                    <strong>Privacy-first</strong>
-                    <small>Built around minimal data handling.</small>
-                  </span>
+              <div className="step-visual">
+                <div className="mini-file">
+                  <span>PDF</span>
                 </div>
-
-                <div>
-                  <LockKeyhole size={21} />
-
-                  <span>
-                    <strong>No forced account</strong>
-                    <small>Use the tools without creating a profile.</small>
-                  </span>
-                </div>
-
-                <div>
-                  <FileText size={21} />
-
-                  <span>
-                    <strong>No watermark</strong>
-                    <small>Your document stays your document.</small>
-                  </span>
+                <div className="mini-plus">+</div>
+                <div className="mini-file ghost">
+                  <span>PDF</span>
                 </div>
               </div>
+
+              <h3>Choose</h3>
+              <p>
+                Add the PDF files you actually need. Drag them in or select
+                them from your device.
+              </p>
+            </article>
+
+            <article className="step-card featured-step">
+              <div className="step-top">
+                <span>02</span>
+                <span>PROCESS</span>
+              </div>
+
+              <div className="step-visual">
+                <div className="process-ring">
+                  <span>✦</span>
+                </div>
+              </div>
+
+              <h3>Transform</h3>
+              <p>
+                Pick the operation you need and let the workspace handle the
+                tedious part.
+              </p>
+            </article>
+
+            <article className="step-card">
+              <div className="step-top">
+                <span>03</span>
+                <span>OUTPUT</span>
+              </div>
+
+              <div className="step-visual">
+                <div className="done-file">
+                  <span>PDF</span>
+                  <b>✓</b>
+                </div>
+              </div>
+
+              <h3>Done</h3>
+              <p>
+                Get the result and move on. No maze of upgrade prompts between
+                you and your file.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        {/* PRIVACY */}
+        <section className="privacy-section section" id="privacy">
+          <div className="privacy-card glass-panel">
+            <div className="privacy-number">04</div>
+
+            <div className="privacy-copy">
+              <span className="section-kicker">PRIVACY BY DESIGN</span>
+
+              <h2>
+                Your files are
+                <br />
+                <span>your business.</span>
+              </h2>
+
+              <p>
+                FreeToolz is designed to minimize unnecessary data collection
+                and favor browser-side processing wherever the technology
+                allows it.
+              </p>
+
+              <button
+                className="text-button"
+                onClick={() => scrollTo("faq")}
+              >
+                Read the FAQ
+                <span>↗</span>
+              </button>
+            </div>
+
+            <div className="privacy-orb">
+              <div className="orb-ring ring-a" />
+              <div className="orb-ring ring-b" />
+              <div className="orb-core">✓</div>
             </div>
           </div>
         </section>
 
-        {/* =========================================================
-            05 — FAQ
-        ========================================================= */}
+        {/* FAQ */}
+        <section className="faq-section section" id="faq">
+          <div className="section-heading">
+            <div>
+              <span className="section-number">05</span>
+              <span className="section-kicker">QUESTIONS</span>
+            </div>
 
-        <section id="faq" className="faq-section section">
-          <div className="section-label">05 / QUESTIONS</div>
-
-          <div className="faq-layout">
             <h2>
-              Frequently
+              Things worth
               <br />
-              <span>asked.</span>
+              <span>knowing.</span>
+            </h2>
+          </div>
+
+          <div className="faq-list">
+            {faqs.map((faq, index) => {
+              const isOpen = openFaq === index;
+
+              return (
+                <button
+                  className={`faq-item ${isOpen ? "faq-open" : ""}`}
+                  key={faq.q}
+                  onClick={() =>
+                    setOpenFaq(isOpen ? null : index)
+                  }
+                >
+                  <span className="faq-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+
+                  <span className="faq-content">
+                    <strong>{faq.q}</strong>
+
+                    <span className="faq-answer">
+                      {faq.a}
+                    </span>
+                  </span>
+
+                  <span className="faq-toggle">
+                    {isOpen ? "−" : "+"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="final-section section">
+          <div className="final-card">
+            <div className="final-glow" />
+
+            <span className="section-kicker">FREEPDF · BY FREETOOLZ</span>
+
+            <h2>
+              Just get the
+              <br />
+              <span>job done.</span>
             </h2>
 
-            <div className="faq-list">
-              <details>
-                <summary>
-                  Is FreePDF actually free?
-                  <ChevronDown size={19} />
-                </summary>
+            <p>
+              No account. No watermark. No unnecessary friction.
+            </p>
 
-                <p>
-                  The goal is to keep the core tools free to use without
-                  artificial daily limits or forced subscriptions.
-                </p>
-              </details>
-
-              <details>
-                <summary>
-                  Do I need an account?
-                  <ChevronDown size={19} />
-                </summary>
-
-                <p>
-                  No account is required for the core FreePDF experience.
-                  You can open the tools and work with your documents without
-                  creating a profile.
-                </p>
-              </details>
-
-              <details>
-                <summary>
-                  Will my files be uploaded?
-                  <ChevronDown size={19} />
-                </summary>
-
-                <p>
-                  Tools can be designed to process files directly in your
-                  browser whenever technically practical. The exact processing
-                  method can vary depending on the particular PDF operation.
-                </p>
-              </details>
-
-              <details>
-                <summary>
-                  Will there be watermarks?
-                  <ChevronDown size={19} />
-                </summary>
-
-                <p>
-                  FreePDF is designed without adding promotional watermarks to
-                  your finished documents.
-                </p>
-              </details>
-
-              <details>
-                <summary>
-                  Can I use FreePDF on my phone?
-                  <ChevronDown size={19} />
-                </summary>
-
-                <p>
-                  Yes. The interface is designed to adapt to desktop, tablet
-                  and mobile screens so the essential PDF workflow remains
-                  comfortable on smaller devices.
-                </p>
-              </details>
-            </div>
+            <button
+              className="primary-button large"
+              onClick={() => scrollTo("workspace")}
+            >
+              <span>Open FreePDF</span>
+              <span>↗</span>
+            </button>
           </div>
-        </section>
-
-        {/* =========================================================
-            06 — FINAL CTA
-        ========================================================= */}
-
-        <section className="final-section section">
-          <div className="final-glow" />
-          <div className="final-ring" />
-
-          <div className="section-label">06 / GET STARTED</div>
-
-          <h2>
-            Your PDF.
-            <br />
-            <span>Your way.</span>
-          </h2>
-
-          <p>
-            Beautifully simple tools for the documents you actually have to
-            deal with.
-          </p>
-
-          <button
-            className="primary-button huge"
-            onClick={chooseFiles}
-          >
-            <Upload size={19} />
-            Open FreePDF
-            <ArrowRight size={18} />
-            <span className="button-shine" />
-          </button>
         </section>
       </main>
 
-      {/* =========================================================
-          FOOTER
-      ========================================================= */}
-
-      <footer className="footer">
+      {/* FOOTER */}
+      <footer className="site-footer">
         <div className="footer-main">
           <div className="footer-brand">
-            <span className="brand-mark">
-              <span />
-              <span />
-              <span />
-            </span>
+            <div className="footer-brand-row">
+              <span className="brand-mark footer-mark">
+                <span className="brand-mark-inner">F</span>
+              </span>
 
-            <div>
-              <strong>FreePDF</strong>
-              <span>PDF tools without the nonsense.</span>
+              <span className="footer-brand-name">
+                Free<span>Toolz</span>
+              </span>
+            </div>
+
+            <p>
+              Useful software.
+              <br />
+              Without the nonsense.
+            </p>
+
+            <div className="footer-status">
+              <span className="status-dot" />
+              Building useful things
             </div>
           </div>
 
-          <p className="footer-description">
-            Simple PDF utilities built around useful tools, a clean
-            experience, and fewer unnecessary barriers.
-          </p>
-        </div>
-
-        <div className="footer-columns">
           <div className="footer-column">
-            <span className="footer-heading">PRODUCT</span>
+            <span className="footer-heading">PRODUCTS</span>
 
-            <button onClick={() => scrollTo("start")}>
-              Get Started
+            <button onClick={() => scrollTo("workspace")}>
+              FreePDF
             </button>
 
-            <button onClick={() => scrollTo("experience")}>
-              How It Works
-            </button>
-
-            <button onClick={() => scrollTo("faq")}>
-              FAQ
-            </button>
+            <button>FreeImage</button>
+            <button>FreeVideo</button>
+            <button>FreeConvert</button>
           </div>
 
           <div className="footer-column">
             <span className="footer-heading">TOOLS</span>
 
-            <button onClick={chooseFiles}>Merge PDF</button>
-            <button onClick={chooseFiles}>Compress PDF</button>
-            <button onClick={chooseFiles}>Split PDF</button>
+            <button onClick={() => scrollTo("workspace")}>
+              Merge PDF
+            </button>
+
+            <button onClick={() => scrollTo("workspace")}>
+              Compress PDF
+            </button>
+
+            <button onClick={() => scrollTo("workspace")}>
+              Split PDF
+            </button>
+
+            <button>View all tools</button>
           </div>
 
           <div className="footer-column">
             <span className="footer-heading">INFORMATION</span>
 
+            <button onClick={() => scrollTo("how")}>
+              How it works
+            </button>
+
             <button onClick={() => scrollTo("privacy")}>
               Privacy Policy
             </button>
 
-            <a
-              href="mailto:YOUR-EMAIL-HERE@example.com"
-              className="footer-link"
-            >
+            <button onClick={() => scrollTo("faq")}>
+              FAQ
+            </button>
+
+            <a href="mailto:YOUR_EMAIL_HERE">
               Contact Developer
             </a>
 
-            <a
-              href="mailto:YOUR-EMAIL-HERE@example.com?subject=FreePDF%20Feedback"
-              className="footer-link"
-            >
+            <a href="mailto:YOUR_EMAIL_HERE?subject=FreeToolz%20Feedback">
               Send Feedback
             </a>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <span>
-            © 2026 FreePDF. All rights reserved.
-          </span>
+          <span>© 2026 FreeToolz. All rights reserved.</span>
 
-          <span>
-            Made to be useful.
-          </span>
+          <span className="footer-line" />
+
+          <span>BUILT FOR THE WEB · BUILT TO BE USEFUL</span>
         </div>
       </footer>
     </div>
-  );
-}
-
-function formatBytes(bytes) {
-  if (!bytes) return "0 KB";
-
-  const units = ["B", "KB", "MB", "GB"];
-  const index = Math.floor(Math.log(bytes) / Math.log(1024));
-
-  return `${(bytes / Math.pow(1024, index)).toFixed(index ? 1 : 0)} ${
-    units[index]
-  }`;
-}
-
-function ArrowUpRightIcon() {
-  return (
-    <ArrowDownRight
-      size={17}
-      style={{ transform: "rotate(-45deg)" }}
-    />
   );
 }
 
