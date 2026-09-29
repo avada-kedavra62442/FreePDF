@@ -1,5 +1,7 @@
 import {
   ArrowRight,
+  Check,
+  ChevronRight,
   FileArchive,
   FileImage,
   FilePlus2,
@@ -8,6 +10,7 @@ import {
   Menu,
   Scissors,
   ShieldCheck,
+  Sparkles,
   X,
 } from "lucide-react";
 import { useRef, useState } from "react";
@@ -16,49 +19,49 @@ const tools = [
   {
     icon: FilePlus2,
     title: "Merge PDF",
-    description: "Combine multiple PDFs into one.",
+    description: "Combine files into one PDF",
     category: "Organize",
   },
   {
     icon: Scissors,
     title: "Split PDF",
-    description: "Split pages into separate PDFs.",
+    description: "Separate pages or ranges",
     category: "Organize",
   },
   {
     icon: Files,
     title: "Organize PDF",
-    description: "Reorder, rotate or delete pages.",
+    description: "Reorder, rotate or delete",
     category: "Organize",
   },
   {
     icon: FileArchive,
     title: "Compress PDF",
-    description: "Reduce PDF file size.",
+    description: "Make your PDF smaller",
     category: "Optimize",
   },
   {
     icon: FileImage,
     title: "PDF to JPG",
-    description: "Convert PDF pages to images.",
+    description: "Convert pages to images",
     category: "Convert",
   },
   {
     icon: FilePlus2,
     title: "JPG to PDF",
-    description: "Turn images into a PDF.",
+    description: "Create a PDF from images",
     category: "Convert",
   },
   {
     icon: LockKeyhole,
     title: "Protect PDF",
-    description: "Password-protect a PDF.",
+    description: "Add password protection",
     category: "Security",
   },
   {
     icon: ShieldCheck,
     title: "Sign PDF",
-    description: "Add a signature to your document.",
+    description: "Add your signature",
     category: "Security",
   },
 ];
@@ -73,32 +76,47 @@ function App() {
       (file) => file.type === "application/pdf"
     );
 
-    setSelectedFiles(files);
-  };
-
-  const openPicker = () => {
-    inputRef.current?.click();
+    setSelectedFiles((current) => [...current, ...files]);
+    event.target.value = "";
   };
 
   const removeFile = (index) => {
     setSelectedFiles((files) => files.filter((_, i) => i !== index));
   };
 
+  const openPicker = () => {
+    inputRef.current?.click();
+  };
+
+  const scrollToTools = () => {
+    document.getElementById("tools")?.scrollIntoView({
+      behavior: "smooth",
+    });
+  };
+
   return (
     <div className="app">
+      <div className="ambient ambient-one" />
+      <div className="ambient ambient-two" />
+
       <header className="navbar">
         <a className="brand" href="#top">
-          <span className="brand-mark">F</span>
-          <span>FreePDF</span>
+          <span className="brand-mark">
+            <span>F</span>
+          </span>
+
+          <span className="brand-name">FreePDF</span>
         </a>
 
-        <nav className={menuOpen ? "nav-links open" : "nav-links"}>
+        <nav className={`nav-links ${menuOpen ? "open" : ""}`}>
           <a href="#tools" onClick={() => setMenuOpen(false)}>
-            PDF Tools
+            Tools
           </a>
-          <a href="#about" onClick={() => setMenuOpen(false)}>
-            About
+
+          <a href="#why" onClick={() => setMenuOpen(false)}>
+            Why FreePDF
           </a>
+
           <a href="#privacy" onClick={() => setMenuOpen(false)}>
             Privacy
           </a>
@@ -107,29 +125,28 @@ function App() {
         <button
           className="mobile-menu"
           onClick={() => setMenuOpen((value) => !value)}
-          aria-label="Open menu"
+          aria-label="Toggle navigation"
         >
-          {menuOpen ? <X size={21} /> : <Menu size={21} />}
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </header>
 
       <main id="top">
         <section className="hero">
-          <div className="hero-copy">
-            <div className="eyebrow">
-              <ShieldCheck size={15} />
-              Free PDF tools • No account required
+          <div className="hero-heading">
+            <div className="hero-pill">
+              <Sparkles size={14} />
+              <span>Simple PDF tools. No subscription.</span>
             </div>
 
             <h1>
-              Everything you need
-              <br />
-              <span>to work with PDFs.</span>
+              PDFs, without
+              <span> the nonsense.</span>
             </h1>
 
             <p>
-              Merge, split, compress, convert and organize your PDFs.
-              No ads. No watermark. No unnecessary signup.
+              Edit, organize, convert and compress your documents with tools
+              designed to stay simple, private and genuinely free.
             </p>
           </div>
 
@@ -142,77 +159,133 @@ function App() {
             onChange={handleFiles}
           />
 
-          <div className="dropzone">
-            <div className="drop-icon">
-              <FilePlus2 size={30} />
+          <div className="workspace-shell">
+            <div className="workspace-top">
+              <div>
+                <span className="workspace-label">START A PDF TASK</span>
+                <strong>Choose your files</strong>
+              </div>
+
+              <div className="workspace-status">
+                <span className="status-dot" />
+                Browser-first
+              </div>
             </div>
 
-            <h2>
-              {selectedFiles.length
-                ? `${selectedFiles.length} PDF${
-                    selectedFiles.length === 1 ? "" : "s"
-                  } selected`
-                : "Drop your PDFs here"}
-            </h2>
+            <div className="dropzone" onClick={openPicker}>
+              <div className="upload-orb">
+                <FilePlus2 size={27} />
+              </div>
 
-            <p>
-              {selectedFiles.length
-                ? "Your files are ready to use."
-                : "or choose files from your device"}
-            </p>
+              <h2>
+                {selectedFiles.length
+                  ? `${selectedFiles.length} PDF${
+                      selectedFiles.length === 1 ? "" : "s"
+                    } selected`
+                  : "Drop your PDF files here"}
+              </h2>
 
-            <button className="choose-button" onClick={openPicker}>
-              {selectedFiles.length ? "Add more PDFs" : "Choose PDF files"}
-            </button>
+              <p>
+                {selectedFiles.length
+                  ? "Add more files or continue with your selection."
+                  : "Drag & drop or choose files from your device"}
+              </p>
 
-            <small>
-              Files are handled in your browser whenever possible.
-            </small>
-          </div>
+              <button
+                className="choose-button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  openPicker();
+                }}
+              >
+                {selectedFiles.length ? "Add more files" : "Choose files"}
+              </button>
 
-          {selectedFiles.length > 0 && (
-            <div className="selected-files">
-              {selectedFiles.map((file, index) => (
-                <div className="file-row" key={`${file.name}-${index}`}>
-                  <div className="file-info">
-                    <span className="file-symbol">
-                      <FileImage size={17} />
-                    </span>
+              <span className="drop-hint">
+                PDF files • No account required
+              </span>
+            </div>
 
-                    <span>
-                      <strong>{file.name}</strong>
-                      <small>
-                        {(file.size / 1024 / 1024).toFixed(2)} MB
-                      </small>
-                    </span>
-                  </div>
+            {selectedFiles.length > 0 && (
+              <div className="selected-area">
+                <div className="selected-heading">
+                  <span>
+                    Selected files
+                    <b>{selectedFiles.length}</b>
+                  </span>
 
-                  <button
-                    className="remove-file"
-                    onClick={() => removeFile(index)}
-                    aria-label={`Remove ${file.name}`}
-                  >
-                    <X size={17} />
+                  <button onClick={() => setSelectedFiles([])}>
+                    Clear all
                   </button>
                 </div>
-              ))}
 
-              <button className="continue-button">
-                Continue
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          )}
+                <div className="file-list">
+                  {selectedFiles.map((file, index) => (
+                    <div className="file-row" key={`${file.name}-${index}`}>
+                      <div className="file-icon">
+                        <FileImage size={17} />
+                      </div>
+
+                      <div className="file-details">
+                        <strong>{file.name}</strong>
+                        <span>
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+
+                      <button
+                        className="remove-file"
+                        onClick={() => removeFile(index)}
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        <X size={17} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <button className="continue-button">
+                  Continue with files
+                  <ArrowRight size={17} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="trust-strip">
+            <span>
+              <Check size={14} />
+              No watermark
+            </span>
+
+            <span>
+              <Check size={14} />
+              No forced account
+            </span>
+
+            <span>
+              <Check size={14} />
+              No ads
+            </span>
+
+            <span>
+              <ShieldCheck size={14} />
+              Privacy-first
+            </span>
+          </div>
         </section>
 
         <section className="tools-section" id="tools">
-          <div className="section-top">
+          <div className="section-header">
             <div>
-              <span className="section-label">PDF TOOLKIT</span>
-              <h2>Pick a tool.</h2>
+              <span className="section-kicker">TOOLS</span>
+              <h2>Everything in one place.</h2>
             </div>
 
-            <span className="tool-count">8 tools available</span>
+            <button onClick={scrollToTools}>
+              Browse tools
+              <ChevronRight size={17} />
+            </button>
           </div>
 
           <div className="tools-grid">
@@ -221,47 +294,99 @@ function App() {
 
               return (
                 <button className="tool-card" key={tool.title}>
-                  <span className="tool-icon">
-                    <Icon size={21} />
-                  </span>
+                  <div className="tool-card-top">
+                    <span className="tool-icon">
+                      <Icon size={20} />
+                    </span>
 
-                  <span className="tool-content">
-                    <span className="tool-category">{tool.category}</span>
+                    <ChevronRight
+                      className="tool-chevron"
+                      size={17}
+                    />
+                  </div>
+
+                  <div className="tool-card-text">
+                    <span>{tool.category}</span>
                     <strong>{tool.title}</strong>
-                    <span>{tool.description}</span>
-                  </span>
-
-                  <ArrowRight className="tool-arrow" size={18} />
+                    <p>{tool.description}</p>
+                  </div>
                 </button>
               );
             })}
           </div>
         </section>
 
-        <section className="info-grid">
-          <div className="info-card" id="privacy">
-            <ShieldCheck size={24} />
-            <h3>Privacy first</h3>
+        <section className="why-section" id="why">
+          <div className="why-heading">
+            <span className="section-kicker">THE IDEA</span>
+
+            <h2>
+              A useful tool shouldn't
+              <span> need a subscription.</span>
+            </h2>
+
             <p>
-              We design FreePDF around browser-side processing wherever
-              practical, so simple PDF tasks don't need an unnecessary upload.
+              FreePDF is being built around a simple principle: give people
+              the tool they came for, without adding unnecessary friction.
             </p>
           </div>
 
-          <div className="info-card" id="about">
-            <Files size={24} />
-            <h3>Actually free</h3>
+          <div className="why-cards">
+            <div className="why-card">
+              <span className="why-number">01</span>
+              <ShieldCheck size={21} />
+              <h3>Privacy first</h3>
+              <p>
+                Browser-side processing whenever practical, so simple jobs
+                don't need an unnecessary trip to a server.
+              </p>
+            </div>
+
+            <div className="why-card">
+              <span className="why-number">02</span>
+              <Files size={21} />
+              <h3>No artificial limits</h3>
+              <p>
+                No fake daily counters designed to push you toward a payment
+                screen.
+              </p>
+            </div>
+
+            <div className="why-card">
+              <span className="why-number">03</span>
+              <LockKeyhole size={21} />
+              <h3>No forced account</h3>
+              <p>
+                Open the website, use the tool and get your file. That's it.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="privacy-section" id="privacy">
+          <div className="privacy-icon">
+            <ShieldCheck size={25} />
+          </div>
+
+          <div>
+            <span>PRIVACY</span>
+            <h2>Your files are yours.</h2>
             <p>
-              No forced account, no watermark and no artificial “3 files
-              today” restriction.
+              FreePDF is designed to keep processing in your browser whenever
+              the technology allows it. We don't need your documents to make
+              the basic tools useful.
             </p>
           </div>
         </section>
       </main>
 
       <footer className="footer">
-        <strong>FreePDF</strong>
-        <span>Useful PDF tools without the usual nonsense.</span>
+        <div className="footer-brand">
+          <span className="brand-mark small">F</span>
+          <strong>FreePDF</strong>
+        </div>
+
+        <span>Free tools. No nonsense.</span>
       </footer>
     </div>
   );
