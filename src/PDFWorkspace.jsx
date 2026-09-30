@@ -841,7 +841,7 @@ export default function PDFWorkspace() {
      REARRANGE
   ======================================================= */
 
-  async function rearrangePages() {
+  /*async function rearrangePages() {
     if (!activeFile) return;
 
     const selected =
@@ -890,7 +890,7 @@ export default function PDFWorkspace() {
     } finally {
       setProcessing(false);
     }
-  }
+  }*/
 
   /* =======================================================
      ROTATE / EXPORT
@@ -902,14 +902,10 @@ export default function PDFWorkspace() {
     const rotations =
       pageRotations[activeFile.id] || {};
 
-    const indexes =
-      activeFile.pdf
-        ? activeFile.pdf
-            .getPageIndices()
-        : Array.from(
-            { length: activeFile.pages },
-            (_, index) => index
-          );
+const indexes = Array.from(
+  { length: activeFile.pages },
+  (_, index) => index
+);
 
     setProcessing(true);
     setProcessingText(
@@ -2091,7 +2087,6 @@ export default function PDFWorkspace() {
                 "extract",
                 "delete",
                 "rotate",
-                "rearrange",
               ].includes(tool) && (
                 <div className="pdf-selection-bar">
                   <span>
@@ -2128,7 +2123,7 @@ export default function PDFWorkspace() {
                 </div>
               )}
 
-<div className="pdf-page-grid">
+              <div className="pdf-page-grid">
   {activeFile?.pdf &&
     Array.from(
       {
