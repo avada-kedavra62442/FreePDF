@@ -24,37 +24,82 @@ const makeId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 async function readPDF(file) {
-  const originalBuffer = await file.arrayBuffer();
+  try {
+    const originalBuffer = await file.arrayBuffer();
 
-  // PDF.js gets its own independent copy.
-  // Its worker may transfer/detach the underlying buffer,
-  // so it must never receive the same bytes that pdf-lib uses.
-  const previewBytes = new Uint8Array(
-    originalBuffer.slice(0)
-  );
+    console.log(
+      "[FreePDF] File:",
+      file.name,
+      "Size:",
+      originalBuffer.byteLength
+    );
 
-  const loadingTask = pdfjsLib.getDocument({
-    data: previewBytes,
-  });
+    const previewBytes = new Uint8Array(
+      originalBuffer.slice(0)
+    );
 
-  const pdf = await loadingTask.promise;
+    console.log(
+      "[FreePDF] Starting PDF.js:",
+      previewBytes.byteLength,
+      "bytes"
+    );
 
-  // Keep another completely independent copy for pdf-lib.
-  const pdfLibBytes = new Uint8Array(
-    originalBuffer.slice(0)
-  );
+    const loadingTask = pdfjsLib.getDocument({
+      data: previewBytes,
+    });
 
-  return {
-    id: makeId(),
-    file,
-    buffer: pdfLibBytes,
-    name: file.name,
-    size: file.size,
-    pages: pdf.numPages,
-    pdf,
-  };
+    const pdf = await loadingTask.promise;
+
+    console.log(
+      "[FreePDF] PDF.js loaded:",
+      file.name,
+      "pages:",
+      pdf.numPages
+    );
+
+    const pdfLibBytes = new Uint8Array(
+      originalBuffer.slice(0)
+    );
+
+    console.log(
+      "[FreePDF] pdf-lib buffer:",
+      pdfLibBytes.byteLength,
+      "bytes"
+    );
+
+    return {
+      id: makeId(),
+      file,
+      buffer: pdfLibBytes,
+      name: file.name,
+      size: file.size,
+      pages: pdf.numPages,
+      pdf,
+    };
+  } catch (error) {
+    console.error(
+      "[FreePDF] ACTUAL PDF READ ERROR:",
+      error
+    );
+
+    console.error(
+      "[FreePDF] Error name:",
+      error?.name
+    );
+
+    console.error(
+      "[FreePDF] Error message:",
+      error?.message
+    );
+
+    console.error(
+      "[FreePDF] Error stack:",
+      error?.stack
+    );
+
+    throw error;
+  }
 }
-
 function PDFThumbnail({ pdf, pageNumber }) {
   const canvasRef = useRef(null);
 
