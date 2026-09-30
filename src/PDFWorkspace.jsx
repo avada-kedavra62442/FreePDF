@@ -30,8 +30,14 @@ async function readPDF(file) {
     originalBuffer.slice(0)
   );
 
+  const wasmUrl = new URL(
+    "pdfjs-dist/wasm/",
+    import.meta.url
+  ).toString();
+
   const loadingTask = pdfjsLib.getDocument({
     data: previewBytes,
+    wasmUrl,
   });
 
   const pdf = await loadingTask.promise;
