@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
 const formatBytes = (bytes) => {
   if (!bytes) return "0 KB";
 
@@ -24,31 +24,25 @@ const makeId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 async function readPDF(file) {
-  const originalBuffer = await file.arrayBuffer();
-
-  // Give PDF.js its own copy so its worker cannot detach
-  // the bytes that we later need for pdf-lib.
-  const previewData = new Uint8Array(originalBuffer.slice(0));
+  const buffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({
-    data: previewData,
+    data: new Uint8Array(buffer),
   });
 
   const pdf = await loadingTask.promise;
 
-  // Keep a completely independent copy for pdf-lib.
-  const mergeBytes = new Uint8Array(originalBuffer.slice(0));
-
   return {
     id: makeId(),
     file,
-    buffer: mergeBytes,
+    buffer,
     name: file.name,
     size: file.size,
     pages: pdf.numPages,
     pdf,
   };
 }
+
 function PDFThumbnail({ pdf, pageNumber }) {
   const canvasRef = useRef(null);
 
