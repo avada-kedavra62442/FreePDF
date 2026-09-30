@@ -3414,3 +3414,42 @@ a {
     align-items: flex-start;
   }
 }
+
+.freepdf-preview-fallback {
+  width: 150px;
+  min-height: 205px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 12px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.025)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.freepdf-preview-fallback-icon {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(0, 255, 170, 0.08);
+  border: 1px solid rgba(0, 255, 170, 0.18);
+}
+
+.freepdf-preview-fallback-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.freepdf-preview-fallback span {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
