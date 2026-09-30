@@ -26,30 +26,23 @@ const makeId = () =>
 async function readPDF(file) {
   const originalBuffer = await file.arrayBuffer();
 
-  const previewBytes = new Uint8Array(
-    originalBuffer.slice(0)
-  );
-
-  const wasmUrl = new URL(
-    "pdfjs-dist/wasm/",
-    import.meta.url
-  ).toString();
+  // Give PDF.js its own copy so its worker cannot detach
+  // the bytes that we later need for pdf-lib.
+  const previewData = new Uint8Array(originalBuffer.slice(0));
 
   const loadingTask = pdfjsLib.getDocument({
-    data: previewBytes,
-    wasmUrl,
+    data: previewData,
   });
 
   const pdf = await loadingTask.promise;
 
-  const pdfLibBytes = new Uint8Array(
-    originalBuffer.slice(0)
-  );
+  // Keep a completely independent copy for pdf-lib.
+  const mergeBytes = new Uint8Array(originalBuffer.slice(0));
 
   return {
     id: makeId(),
     file,
-    buffer: pdfLibBytes,
+    buffer: mergeBytes,
     name: file.name,
     size: file.size,
     pages: pdf.numPages,
