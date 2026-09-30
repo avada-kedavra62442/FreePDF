@@ -2,10 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
 
-import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url
+).toString();
 const formatBytes = (bytes) => {
   if (!bytes) return "0 KB";
 
@@ -24,81 +24,31 @@ const makeId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 async function readPDF(file) {
-  try {
-    const originalBuffer = await file.arrayBuffer();
+  const originalBuffer = await file.arrayBuffer();
 
-    console.log(
-      "[FreePDF] File:",
-      file.name,
-      "Size:",
-      originalBuffer.byteLength
-    );
+  const previewBytes = new Uint8Array(
+    originalBuffer.slice(0)
+  );
 
-    const previewBytes = new Uint8Array(
-      originalBuffer.slice(0)
-    );
+  const loadingTask = pdfjsLib.getDocument({
+    data: previewBytes,
+  });
 
-    console.log(
-      "[FreePDF] Starting PDF.js:",
-      previewBytes.byteLength,
-      "bytes"
-    );
+  const pdf = await loadingTask.promise;
 
-    const loadingTask = pdfjsLib.getDocument({
-      data: previewBytes,
-    });
+  const pdfLibBytes = new Uint8Array(
+    originalBuffer.slice(0)
+  );
 
-    const pdf = await loadingTask.promise;
-
-    console.log(
-      "[FreePDF] PDF.js loaded:",
-      file.name,
-      "pages:",
-      pdf.numPages
-    );
-
-    const pdfLibBytes = new Uint8Array(
-      originalBuffer.slice(0)
-    );
-
-    console.log(
-      "[FreePDF] pdf-lib buffer:",
-      pdfLibBytes.byteLength,
-      "bytes"
-    );
-
-    return {
-      id: makeId(),
-      file,
-      buffer: pdfLibBytes,
-      name: file.name,
-      size: file.size,
-      pages: pdf.numPages,
-      pdf,
-    };
-  } catch (error) {
-    console.error(
-      "[FreePDF] ACTUAL PDF READ ERROR:",
-      error
-    );
-
-    console.error(
-      "[FreePDF] Error name:",
-      error?.name
-    );
-
-    console.error(
-      "[FreePDF] Error message:",
-      error?.message
-    );
-
-    console.error(
-      "[FreePDF] Error stack:",
-      error?.stack
-    );
-
-    throw error;
-  }
+  return {
+    id: makeId(),
+    file,
+    buffer: pdfLibBytes,
+    name: file.name,
+    size: file.size,
+    pages: pdf.numPages,
+    pdf,
+  };
 }
 function PDFThumbnail({ pdf, pageNumber }) {
   const canvasRef = useRef(null);
