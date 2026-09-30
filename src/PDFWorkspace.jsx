@@ -24,18 +24,30 @@ const makeId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 async function readPDF(file) {
-  const buffer = await file.arrayBuffer();
+  const originalBuffer = await file.arrayBuffer();
+
+  // PDF.js gets its own independent copy.
+  // Its worker may transfer/detach the underlying buffer,
+  // so it must never receive the same bytes that pdf-lib uses.
+  const previewBytes = new Uint8Array(
+    originalBuffer.slice(0)
+  );
 
   const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(buffer),
+    data: previewBytes,
   });
 
   const pdf = await loadingTask.promise;
 
+  // Keep another completely independent copy for pdf-lib.
+  const pdfLibBytes = new Uint8Array(
+    originalBuffer.slice(0)
+  );
+
   return {
     id: makeId(),
     file,
-    buffer,
+    buffer: pdfLibBytes,
     name: file.name,
     size: file.size,
     pages: pdf.numPages,
