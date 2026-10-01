@@ -1,4 +1,4 @@
-```jsx
+
 import React, {
   useCallback,
   useEffect,
@@ -2520,4 +2520,3 @@ export default function PDFWorkspace() {
     </section>
   );
 }
-```
