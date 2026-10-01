@@ -402,6 +402,7 @@ function PreviewPages({ item }) {
 export default function PDFWorkspace() {
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
+  const successRef = useRef(null);
 
   const [files, setFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
@@ -441,6 +442,19 @@ export default function PDFWorkspace() {
       }
     };
   }, [success]);
+
+  useEffect(() => {
+  if (!success) return;
+
+  const frame = requestAnimationFrame(() => {
+    successRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  });
+
+  return () => cancelAnimationFrame(frame);
+}, [success]);
 
   const readPDF = useCallback(async (file) => {
     const buffer = await file.arrayBuffer();
@@ -796,7 +810,7 @@ export default function PDFWorkspace() {
 
   if (success?.type === "split") {
     return (
-      <section className="freepdf-success">
+      <section ref={successRef} className="freepdf-success">
         <div className="freepdf-success-orbit">
           <div className="freepdf-success-check">
             <CheckIcon />
@@ -869,7 +883,7 @@ export default function PDFWorkspace() {
 
   if (success?.type === "merge") {
     return (
-      <section className="freepdf-success">
+      <section ref={successRef} className="freepdf-success">
         <div className="freepdf-success-orbit">
           <div className="freepdf-success-check">
             <CheckIcon />
@@ -920,7 +934,7 @@ export default function PDFWorkspace() {
   }
 
   return (
-    <section className="freepdf-workspace">
+    <section className="freepdf-workspace" id = "workspace">
       <div className="freepdf-workspace-inner">
         <div
           ref={dropZoneRef}
@@ -975,27 +989,6 @@ export default function PDFWorkspace() {
             </div>
           )}
         </div>
-
-        {error && (
-          <div className="freepdf-error">
-            <span>
-              <AlertIcon />
-            </span>
-
-            <div>
-              <strong>Something needs attention</strong>
-              <p>{error}</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setError("")}
-              aria-label="Dismiss error"
-            >
-              <XIcon />
-            </button>
-          </div>
-        )}
 
         {files.length > 0 && (
           <>
@@ -1100,6 +1093,25 @@ export default function PDFWorkspace() {
                     Merge documents together or split a PDF into separate
                     downloadable files.
                   </p>
+                  {error && (
+  <div className="freepdf-error">
+    <span>
+      <AlertIcon />
+    </span>
+
+    <div>
+      <strong>Something needs attention</strong>
+      <p>{error}</p>
+    </div>
+    <button
+      type="button"
+      onClick={() => setError("")}
+      aria-label="Dismiss error"
+    >
+      <XIcon />
+    </button>
+  </div>
+)}
                 </div>
 
                 <div className="freepdf-action-grid">
@@ -1155,6 +1167,25 @@ export default function PDFWorkspace() {
                     Choose a document and decide how its pages should be
                     separated. Everything stays in your browser.
                   </p>
+                  {error && (
+  <div className="freepdf-error">
+    <span>
+      <AlertIcon />
+    </span>
+
+    <div>
+      <strong>Something needs attention</strong>
+      <p>{error}</p>
+    </div>
+    <button
+      type="button"
+      onClick={() => setError("")}
+      aria-label="Dismiss error"
+    >
+      <XIcon />
+    </button>
+  </div>
+)}
                 </div>
 
                 <div>
