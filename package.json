@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "@vercel/analytics": "latest",
     "vite": "latest",
     "react": "latest",
     "react-dom": "latest",
