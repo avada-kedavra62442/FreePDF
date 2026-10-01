@@ -4199,3 +4199,8 @@ a {
     grid-template-columns: 1fr;
   }
 }
+
+.freepdf-workspace,
+.freepdf-success {
+  scroll-margin-top: 110px;
+}
