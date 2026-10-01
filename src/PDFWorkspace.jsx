@@ -1180,6 +1180,7 @@ export default function PDFWorkspace() {
     </div>
     <button
       type="button"
+      className="freepdf-error-dismiss"
       onClick={() => setError("")}
       aria-label="Dismiss error"
     >
