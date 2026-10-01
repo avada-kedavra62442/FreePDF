@@ -6,6 +6,7 @@ import React, {
   useState,
 } from "react";
 import { PDFDocument } from "pdf-lib";
+import { compressPDF } from "./utils/compressPDF";
 
 /*
   FreePDF Workspace
@@ -410,6 +411,10 @@ export default function PDFWorkspace() {
   const [processingOperation, setProcessingOperation] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(null);
+  const [compressionPreset, setCompressionPreset] = useState("balanced");
+const [compressionBusy, setCompressionBusy] = useState(false);
+const [compressionProgress, setCompressionProgress] = useState("");
+const [compressionResult, setCompressionResult] = useState(null);
 
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitSourceId, setSplitSourceId] = useState("");
@@ -569,6 +574,62 @@ export default function PDFWorkspace() {
     }
   };
 
+const handleCompress = async () => {
+  if (!files.length) {
+    setError("Please upload a PDF before compressing.");
+    return;
+  }
+
+  const selectedPDF = files[0];
+
+  try {
+    setError("");
+    setCompressionBusy(true);
+    setCompressionProgress("Preparing PDF…");
+    setCompressionResult(null);
+
+    const originalBytes = selectedPDF.buffer;
+
+    const compressedBytes = await compressPDF(
+      originalBytes,
+      compressionPreset,
+      (message) => {
+        setCompressionProgress(message);
+      }
+    );
+
+    const originalSize = originalBytes.byteLength;
+    const compressedSize = compressedBytes.byteLength;
+
+    const reduction =
+      originalSize > 0
+        ? Math.max(
+            0,
+            ((originalSize - compressedSize) / originalSize) * 100
+          )
+        : 0;
+
+    setCompressionResult({
+      bytes: compressedBytes,
+      originalSize,
+      compressedSize,
+      reduction,
+      wasSmaller: compressedSize < originalSize,
+      originalName: selectedPDF.name,
+    });
+  } catch (err) {
+    console.error("[FreePDF] Compression failed:", err);
+
+    setError(
+      err?.message ||
+        "PDF compression failed. Please try again."
+    );
+  } finally {
+    setCompressionBusy(false);
+    setCompressionProgress("");
+  }
+};
+  
   const handleDrop = async (event) => {
     event.preventDefault();
     event.stopPropagation();
