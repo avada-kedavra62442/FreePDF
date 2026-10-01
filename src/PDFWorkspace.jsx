@@ -415,6 +415,7 @@ export default function PDFWorkspace() {
 const [compressionBusy, setCompressionBusy] = useState(false);
 const [compressionProgress, setCompressionProgress] = useState("");
 const [compressionResult, setCompressionResult] = useState(null);
+  const [compressionOpen, setCompressionOpen] = useState(false);
 
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitSourceId, setSplitSourceId] = useState("");
@@ -671,6 +672,21 @@ const handleCompress = async () => {
     setSplitOpen(true);
   };
 
+  const openCompression = () => {
+  setSplitOpen(false);
+  setCompressionOpen(true);
+  setCompressionResult(null);
+  setCompressionProgress("");
+  setError("");
+};
+
+const closeCompression = () => {
+  setCompressionOpen(false);
+  setCompressionResult(null);
+  setCompressionProgress("");
+  setError("");
+};
+  
   const closeSplit = () => {
     if (processing) return;
 
@@ -1145,7 +1161,7 @@ const handleCompress = async () => {
               ))}
             </div>
 
-            {!splitOpen ? (
+            {!splitOpen && !compressionOpen ? (
               <div className="freepdf-action-panel">
                 <div>
                   <span className="freepdf-eyebrow">PDF TOOLS</span>
@@ -1209,18 +1225,23 @@ const handleCompress = async () => {
                     <b><ChevronIcon /></b>
                   </button>
 
-                  <button
-                    type="button"
-                    className="freepdf-action-card"
-                    disabled
-                  >
-                    <span>Compress</span>
-                    <small>Coming next</small>
-                    <b><ChevronIcon /></b>
-                  </button>
+<button
+  type="button"
+  className={`freepdf-action-card ${
+    compressionOpen ? "freepdf-action-primary" : ""
+  }`}
+  onClick={openCompression}
+  disabled={files.length === 0 || processing}
+>
+  <span>Compress</span>
+  <small>Reduce PDF file size</small>
+  <b>
+    {compressionOpen ? "✓" : <ChevronIcon />}
+  </b>
+</button>
                 </div>
               </div>
-            ) : (
+            ) : splitOpen ? (
               <div className="freepdf-action-panel">
                 <div>
                   <span className="freepdf-eyebrow">SPLIT PDF</span>
