@@ -5,13 +5,9 @@ import React, {
   useState,
 } from "react";
 
-import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+const formatBytes = (bytes) => {
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 KB";
@@ -30,6 +26,50 @@ const formatBytes = (bytes) => {
 const makeId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
+  /*
+ * PDF.js is intentionally loaded lazily.
+ *
+ * IMPORTANT:
+ * PDF.js must never be required for the FreePDF
+ * application itself to start.
+ *
+ * This is especially important for Safari/iOS/iPadOS.
+ *
+ * We use the legacy PDF.js build because it provides
+ * broader browser compatibility.
+ */
+
+let pdfjsPromise = null;
+
+async function loadPDFJS() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import(
+      "pdfjs-dist/legacy/build/pdf.mjs"
+    )
+      .then((module) => {
+        module.GlobalWorkerOptions.workerSrc =
+          new URL(
+            "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+            import.meta.url
+          ).toString();
+
+        return module;
+      })
+      .catch((error) => {
+        pdfjsPromise = null;
+
+        console.warn(
+          "[FreePDF] PDF.js could not be loaded:",
+          error
+        );
+
+        return null;
+      });
+  }
+
+  return pdfjsPromise;
+}
+
 /*
  * IMPORTANT ARCHITECTURE
  *
@@ -39,7 +79,7 @@ const makeId = () =>
  * Therefore, if PDF.js has a Chrome-specific problem,
  * the actual PDF can still be merged/split/etc.
  */
-async function readPDF(file) {
+/*async function readPDF(file) {
   const buffer = await file.arrayBuffer();
 
   // pdf-lib validates and reads the actual PDF.
@@ -51,12 +91,12 @@ async function readPDF(file) {
   // Keep a fresh independent Uint8Array for future operations.
   const operationBytes = new Uint8Array(buffer.slice(0));
 
-  /*
+  
    * PDF.js preview is deliberately optional.
    *
    * If Chrome has a PDF.js/worker/decoder problem,
    * we simply continue without thumbnails.
-   */
+   
   let previewPdf = null;
 
   try {
@@ -84,8 +124,95 @@ async function readPDF(file) {
     pdf: previewPdf,
     previewAvailable: Boolean(previewPdf),
   };
-}
+}*/
 
+  async function readPDF(file) {
+  /*
+   * STEP 1
+   *
+   * Read the file normally.
+   *
+   * This path does NOT depend on PDF.js.
+   */
+  const buffer = await file.arrayBuffer();
+
+  /*
+   * STEP 2
+   *
+   * pdf-lib is the authoritative PDF reader.
+   *
+   * If PDF.js has any Safari/iOS compatibility
+   * problem, this part still works independently.
+   */
+  const pdfDocument =
+    await PDFDocument.load(buffer);
+
+  const pages =
+    pdfDocument.getPageCount();
+
+  /*
+   * Keep a fresh independent copy for all
+   * future PDF operations.
+   */
+  const operationBytes =
+    new Uint8Array(
+      buffer.slice(0)
+    );
+
+  /*
+   * STEP 3
+   *
+   * PDF.js is OPTIONAL.
+   *
+   * The application has already successfully
+   * loaded the PDF before we even attempt this.
+   */
+  let previewPdf = null;
+
+  try {
+    const pdfjsLib =
+      await loadPDFJS();
+
+    if (pdfjsLib) {
+      const previewBytes =
+        new Uint8Array(
+          buffer.slice(0)
+        );
+
+      const loadingTask =
+        pdfjsLib.getDocument({
+          data: previewBytes,
+        });
+
+      previewPdf =
+        await loadingTask.promise;
+    }
+  } catch (previewError) {
+    /*
+     * Thumbnail failure must NEVER prevent
+     * the PDF from entering the workspace.
+     */
+    console.warn(
+      "[FreePDF] PDF.js preview unavailable:",
+      previewError
+    );
+
+    previewPdf = null;
+  }
+
+  return {
+    id: makeId(),
+    file,
+    buffer: operationBytes,
+    name: file.name,
+    size: file.size,
+    pages,
+    pdf: previewPdf,
+    previewAvailable:
+      Boolean(previewPdf),
+  };
+}
+  
 function PDFThumbnail({ pdf, pageNumber }) {
   const canvasRef = useRef(null);
 
