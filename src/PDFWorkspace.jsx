@@ -69,7 +69,10 @@ function stripPdfExtension(filename) {
 
 function UploadIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 16V4" />
       <path d="m7 9 5-5 5 5" />
@@ -80,7 +83,10 @@ function UploadIcon() {
 
 function FileIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
       <path d="M14 2v6h6" />
@@ -92,7 +98,10 @@ function FileIcon() {
 
 function XIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
       <path d="m6 6 12 12" />
       <path d="M18 6 6 18" />
@@ -102,7 +111,10 @@ function XIcon() {
 
 function ChevronIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m9 18 6-6-6-6" />
     </svg>
@@ -111,7 +123,10 @@ function ChevronIcon() {
 
 function DownloadIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 4v11" />
       <path d="m7 11 5 5 5-5" />
@@ -122,7 +137,10 @@ function DownloadIcon() {
 
 function CheckIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="m5 12 4 4L19 6" />
     </svg>
@@ -131,7 +149,10 @@ function CheckIcon() {
 
 function AlertIcon() {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 3 2.5 20h19L12 3Z" />
       <path d="M12 9v5" />
@@ -775,109 +796,125 @@ export default function PDFWorkspace() {
 
   if (success?.type === "split") {
     return (
-      <section className="freepdf-workspace freepdf-success-state">
-        <div className="freepdf-success-card">
-          <div className="freepdf-success-icon">
+      <section className="freepdf-success">
+        <div className="freepdf-success-orbit">
+          <div className="freepdf-success-check">
             <CheckIcon />
           </div>
-
-          <div className="freepdf-success-heading">
-            <span className="freepdf-eyebrow">SPLIT COMPLETE</span>
-            <h2>Your PDF has been split.</h2>
-            <p>
-              {success.outputs?.length || 0} separate PDF{" "}
-              {success.outputs?.length === 1 ? "file is" : "files are"} ready
-              to download.
-            </p>
-          </div>
-
-          <div className="freepdf-output-list">
-            {success.outputs?.map((output) => (
-              <div className="freepdf-output-item" key={output.id}>
-                <div className="freepdf-output-icon">
-                  <FileIcon />
-                </div>
-
-                <div className="freepdf-output-info">
-                  <strong>{output.filename}</strong>
-                  <span>
-                    {output.pages}{" "}
-                    {output.pages === 1 ? "page" : "pages"} ·{" "}
-                    {formatBytes(output.size)}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  className="freepdf-download-button"
-                  onClick={() => downloadOutput(output)}
-                >
-                  <DownloadIcon />
-                  <span>Download</span>
-                </button>
-              </div>
-            ))}
-          </div>
-
-          <div className="freepdf-success-actions">
-            <button
-              type="button"
-              className="freepdf-primary-button"
-              onClick={startAgain}
-            >
-              Split another PDF
-            </button>
-          </div>
         </div>
+
+        <span className="freepdf-eyebrow">SPLIT COMPLETE</span>
+
+        <h2>
+          <span>Your PDF has been split.</span>
+        </h2>
+
+        <p>
+          {success.outputs?.length || 0} separate PDF {
+            success.outputs?.length === 1 ? "file is" : "files are"
+          } ready to download.
+        </p>
+
+        <div
+          style={{
+            width: "min(650px, 100%)",
+            display: "grid",
+            gap: 10,
+            marginTop: 35,
+          }}
+        >
+          {success.outputs?.map((output) => (
+            <div
+              className="freepdf-result-card"
+              key={output.id}
+              style={{ marginTop: 0, width: "100%", boxSizing: "border-box" }}
+            >
+              <div className="freepdf-result-icon">
+                <FileIcon />
+              </div>
+
+              <div className="freepdf-result-info">
+                <strong title={output.filename}>
+                  {output.filename}
+                </strong>
+                <span>
+                  {output.pages} {
+                    output.pages === 1 ? "page" : "pages"
+                  } · {formatBytes(output.size)}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                className="freepdf-download-button"
+                onClick={() => downloadOutput(output)}
+              >
+                <DownloadIcon />
+                <span>Download</span>
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          className="freepdf-start-again"
+          onClick={startAgain}
+        >
+          Back
+        </button>
       </section>
     );
   }
 
   if (success?.type === "merge") {
     return (
-      <section className="freepdf-workspace freepdf-success-state">
-        <div className="freepdf-success-card">
-          <div className="freepdf-success-icon">
+      <section className="freepdf-success">
+        <div className="freepdf-success-orbit">
+          <div className="freepdf-success-check">
             <CheckIcon />
           </div>
-
-          <div className="freepdf-success-heading">
-            <span className="freepdf-eyebrow">MERGE COMPLETE</span>
-            <h2>Your PDFs are merged.</h2>
-            <p>Your new PDF is ready to download.</p>
-          </div>
-
-          <div className="freepdf-success-summary">
-            <div>
-              <span>Pages</span>
-              <strong>{formatNumber(success.pages)}</strong>
-            </div>
-
-            <div>
-              <span>File size</span>
-              <strong>{formatBytes(success.size)}</strong>
-            </div>
-          </div>
-
-          <div className="freepdf-success-actions">
-            <button
-              type="button"
-              className="freepdf-primary-button"
-              onClick={() => downloadOutput(success)}
-            >
-              <DownloadIcon />
-              Download PDF
-            </button>
-
-            <button
-              type="button"
-              className="freepdf-secondary-button"
-              onClick={startAgain}
-            >
-              Start again
-            </button>
-          </div>
         </div>
+
+        <span className="freepdf-eyebrow">MERGE COMPLETE</span>
+
+        <h2>
+          <span>Your PDFs are merged.</span>
+        </h2>
+
+        <p>Your new PDF is ready to download.</p>
+
+        <div className="freepdf-result-card">
+          <div className="freepdf-result-icon">
+            <FileIcon />
+          </div>
+
+          <div className="freepdf-result-info">
+            <strong title={success.filename}>
+              {success.filename}
+            </strong>
+            <span>
+              {formatNumber(success.pages)} pages · {formatBytes(success.size)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="freepdf-download-button"
+            onClick={() => downloadOutput(success)}
+          >
+            <DownloadIcon />
+            <span>Download</span>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="freepdf-start-again"
+          onClick={startAgain}
+        >
+          Back
+        </button>
       </section>
     );
   }
@@ -1054,213 +1091,237 @@ export default function PDFWorkspace() {
               ))}
             </div>
 
-            <div className="freepdf-action-panel">
-              <div>
-                <span className="freepdf-eyebrow">PDF TOOLS</span>
-                <h3>What would you like to do?</h3>
-                <p>
-                  Merge documents together or split a PDF into separate
-                  downloadable files.
-                </p>
-              </div>
-
-              <div className="freepdf-action-grid">
-                <button
-                  type="button"
-                  className="freepdf-action-card freepdf-action-primary"
-                  onClick={mergePDFs}
-                  disabled={files.length < 2 || processing}
-                >
-                  <span>Merge</span>
-                  <small>Combine multiple PDFs into one</small>
-                  <b><ChevronIcon /></b>
-                </button>
-
-                <button
-                  type="button"
-                  className="freepdf-action-card freepdf-action-primary"
-                  onClick={openSplit}
-                  disabled={files.length === 0 || processing}
-                >
-                  <span>Split</span>
-                  <small>Divide a PDF into separate parts</small>
-                  <b><ChevronIcon /></b>
-                </button>
-
-                <button
-                  type="button"
-                  className="freepdf-action-card"
-                  disabled
-                >
-                  <span>Extract</span>
-                  <small>Coming next</small>
-                  <b>→</b>
-                </button>
-
-                <button
-                  type="button"
-                  className="freepdf-action-card"
-                  disabled
-                >
-                  <span>Compress</span>
-                  <small>Coming next</small>
-                  <b>→</b>
-                </button>
-              </div>
-            </div>
-
-            {splitOpen && (
+            {!splitOpen ? (
               <div className="freepdf-action-panel">
                 <div>
-                  <span className="freepdf-eyebrow">SPLIT PDF</span>
-                  <h3>Divide your PDF</h3>
+                  <span className="freepdf-eyebrow">PDF TOOLS</span>
+                  <h3>What would you like to do?</h3>
                   <p>
-                    Choose a document and decide how its pages should be
-                    separated.
+                    Merge documents together or split a PDF into separate
+                    downloadable files.
                   </p>
                 </div>
 
                 <div className="freepdf-action-grid">
                   <button
                     type="button"
-                    className={`freepdf-action-card ${
-                      splitMode === "pages"
-                        ? "freepdf-action-primary"
-                        : ""
-                    }`}
-                    onClick={() => setSplitMode("pages")}
-                    disabled={processing}
+                    className="freepdf-action-card freepdf-action-primary"
+                    onClick={mergePDFs}
+                    disabled={files.length < 2 || processing}
                   >
-                    <span>Every page</span>
-                    <small>Create one PDF for each page</small>
-                    <b>{splitMode === "pages" ? "✓" : "→"}</b>
+                    <span>Merge</span>
+                    <small>Combine multiple PDFs into one</small>
+                    <b><ChevronIcon /></b>
                   </button>
 
                   <button
                     type="button"
-                    className={`freepdf-action-card ${
-                      splitMode === "ranges"
-                        ? "freepdf-action-primary"
-                        : ""
-                    }`}
-                    onClick={() => setSplitMode("ranges")}
-                    disabled={processing}
+                    className="freepdf-action-card freepdf-action-primary"
+                    onClick={openSplit}
+                    disabled={files.length === 0 || processing}
                   >
-                    <span>Custom ranges</span>
-                    <small>Choose exactly which sections to create</small>
-                    <b>{splitMode === "ranges" ? "✓" : "→"}</b>
+                    <span>Split</span>
+                    <small>Divide a PDF into separate parts</small>
+                    <b><ChevronIcon /></b>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="freepdf-action-card"
+                    disabled
+                  >
+                    <span>Extract</span>
+                    <small>Coming next</small>
+                    <b><ChevronIcon /></b>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="freepdf-action-card"
+                    disabled
+                  >
+                    <span>Compress</span>
+                    <small>Coming next</small>
+                    <b><ChevronIcon /></b>
                   </button>
                 </div>
+              </div>
+            ) : (
+              <div className="freepdf-action-panel">
+                <div>
+                  <span className="freepdf-eyebrow">SPLIT PDF</span>
+                  <h3>Divide your PDF</h3>
+                  <p>
+                    Choose a document and decide how its pages should be
+                    separated. Everything stays in your browser.
+                  </p>
+                </div>
 
-                <div className="freepdf-file-card" style={{ marginTop: 12 }}>
-                  <div className="freepdf-file-icon">
-                    <FileIcon />
+                <div>
+                  <div className="freepdf-action-grid">
+                    <button
+                      type="button"
+                      className={`freepdf-action-card ${
+                        splitMode === "pages"
+                          ? "freepdf-action-primary"
+                          : ""
+                      }`}
+                      onClick={() => setSplitMode("pages")}
+                      disabled={processing}
+                    >
+                      <span>Every page</span>
+                      <small>One PDF for each page</small>
+                      <b>
+                        {splitMode === "pages" ? "✓" : <ChevronIcon />}
+                      </b>
+                    </button>
+
+                    <button
+                      type="button"
+                      className={`freepdf-action-card ${
+                        splitMode === "ranges"
+                          ? "freepdf-action-primary"
+                          : ""
+                      }`}
+                      onClick={() => setSplitMode("ranges")}
+                      disabled={processing}
+                    >
+                      <span>Custom ranges</span>
+                      <small>Choose sections to create</small>
+                      <b>
+                        {splitMode === "ranges" ? "✓" : <ChevronIcon />}
+                      </b>
+                    </button>
                   </div>
 
-                  <div className="freepdf-file-info">
-                    <strong>PDF to split</strong>
-                    <select
-                      value={splitSourceId}
-                      onChange={(event) =>
-                        setSplitSourceId(event.target.value)
-                      }
-                      disabled={processing}
-                      aria-label="PDF to split"
+                  <div
+                    className="freepdf-result-card"
+                    style={{ marginTop: 12, width: "100%", boxSizing: "border-box" }}
+                  >
+                    <div className="freepdf-result-icon">
+                      <FileIcon />
+                    </div>
+
+                    <div className="freepdf-result-info">
+                      <strong>PDF to split</strong>
+                      <span>
+                        {selectedSplitSource?.name || "Choose a document"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className="freepdf-action-grid"
+                    style={{ marginTop: 11 }}
+                  >
+                    {files.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={`freepdf-action-card ${
+                          item.id === splitSourceId
+                            ? "freepdf-action-primary"
+                            : ""
+                        }`}
+                        onClick={() => setSplitSourceId(item.id)}
+                        disabled={processing}
+                      >
+                        <span>{item.name}</span>
+                        <small>
+                          {item.pages} {item.pages === 1 ? "page" : "pages"} · {formatBytes(item.size)}
+                        </small>
+                        <b>
+                          {item.id === splitSourceId ? "✓" : <ChevronIcon />}
+                        </b>
+                      </button>
+                    ))}
+                  </div>
+
+                  {splitMode === "ranges" && (
+                    <div
+                      className="freepdf-result-card"
                       style={{
+                        marginTop: 11,
                         width: "100%",
-                        marginTop: 8,
-                        padding: "10px 12px",
-                        borderRadius: 10,
-                        border: "1px solid rgba(202,219,212,.12)",
-                        background: "rgba(255,255,255,.035)",
-                        color: "#edf6f2",
+                        boxSizing: "border-box",
                       }}
                     >
-                      {files.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} — {item.pages}{" "}
-                          {item.pages === 1 ? "page" : "pages"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                      <div className="freepdf-result-icon">
+                        <span style={{ fontSize: 16, fontWeight: 800 }}>#</span>
+                      </div>
 
-                {splitMode === "ranges" && (
+                      <div className="freepdf-result-info">
+                        <strong>Page ranges</strong>
+                        <span>Example: 1-3, 5-7, 10</span>
+                        <input
+                          type="text"
+                          value={splitRanges}
+                          onChange={(event) => setSplitRanges(event.target.value)}
+                          placeholder="1-3, 5-7, 10"
+                          disabled={processing}
+                          aria-label="Page ranges"
+                          style={{
+                            width: "100%",
+                            boxSizing: "border-box",
+                            marginTop: 9,
+                            minHeight: 42,
+                            padding: "0 12px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(202,219,212,0.12)",
+                            background: "rgba(255,255,255,0.035)",
+                            color: "#edf6f2",
+                            outline: "none",
+                            font: "inherit",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedSplitSource && (
+                    <div
+                      style={{
+                        marginTop: 13,
+                        color: "rgba(200,218,210,0.48)",
+                        fontSize: 10,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {splitMode === "pages"
+                        ? `This will create ${selectedSplitSource.pages} PDF ${selectedSplitSource.pages === 1 ? "file" : "files"}.`
+                        : "Each comma-separated section becomes a separate PDF."}
+                    </div>
+                  )}
+
                   <div
-                    className="freepdf-file-card"
-                    style={{ marginTop: 12 }}
+                    style={{
+                      display: "flex",
+                      justifyContent: "flex-end",
+                      alignItems: "center",
+                      gap: 10,
+                      marginTop: 18,
+                      flexWrap: "wrap",
+                    }}
                   >
-                    <div className="freepdf-file-icon">
-                      <span style={{ fontSize: 18 }}>#</span>
-                    </div>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={closeSplit}
+                      disabled={processing}
+                    >
+                      Cancel
+                    </button>
 
-                    <div className="freepdf-file-info">
-                      <strong>Page ranges</strong>
-                      <span>
-                        Example: 1-3, 5-7, 10
-                      </span>
-
-                      <input
-                        type="text"
-                        value={splitRanges}
-                        onChange={(event) =>
-                          setSplitRanges(event.target.value)
-                        }
-                        placeholder="1-3, 5-7, 10"
-                        disabled={processing}
-                        aria-label="Page ranges"
-                        style={{
-                          width: "100%",
-                          marginTop: 8,
-                          padding: "11px 12px",
-                          borderRadius: 10,
-                          border: "1px solid rgba(202,219,212,.12)",
-                          background: "rgba(255,255,255,.035)",
-                          color: "#edf6f2",
-                          outline: "none",
-                        }}
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={splitPDF}
+                      disabled={processing || !selectedSplitSource}
+                    >
+                      {processing ? "Splitting..." : "Split PDF"}
+                      {!processing && <ChevronIcon />}
+                    </button>
                   </div>
-                )}
-
-                {selectedSplitSource && (
-                  <div style={{ marginTop: 12 }}>
-                    <span className="freepdf-eyebrow">
-                      {selectedSplitSource.pages}{" "}
-                      {selectedSplitSource.pages === 1 ? "PAGE" : "PAGES"}{" "}
-                      AVAILABLE
-                    </span>
-                  </div>
-                )}
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    gap: 10,
-                    marginTop: 16,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <button
-                    type="button"
-                    className="freepdf-secondary-button"
-                    onClick={closeSplit}
-                    disabled={processing}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    className="freepdf-primary-button"
-                    onClick={splitPDF}
-                    disabled={processing}
-                  >
-                    {processing ? "Splitting..." : "Split PDF"}
-                  </button>
                 </div>
               </div>
             )}
