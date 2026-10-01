@@ -16,7 +16,8 @@
     "react-dom": "latest",
     "pdfjs-dist": "latest",
     "lucide-react": "latest",
-    "pdf-lib": "latest"
+    "pdf-lib": "latest",
+    "@wasm-zoo/ghostscript": "^0.7.2"
   },
   "devDependencies": {}
 }
