@@ -3453,3 +3453,794 @@ a {
   letter-spacing: 0.18em;
   font-weight: 700;
 }
+
+/* ============================================================
+   FreePDF — Split PDF
+   Add this entire block at the END of styles.css
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   ACTIVE SPLIT ACTION CARD
+   Makes Split visually match the active Merge card instead
+   of looking like Extract / Compress.
+------------------------------------------------------------ */
+
+.freepdf-action-card-primary {
+  cursor: pointer;
+  opacity: 1;
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
+
+  border-color: rgba(0, 255, 170, 0.28);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(0, 255, 170, 0.12),
+      rgba(255, 255, 255, 0.045)
+    );
+
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.freepdf-action-card-primary:not(:disabled):hover {
+  transform: translateY(-2px);
+
+  border-color: rgba(0, 255, 170, 0.5);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(0, 255, 170, 0.18),
+      rgba(255, 255, 255, 0.065)
+    );
+
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.24),
+    0 0 28px rgba(0, 255, 170, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.freepdf-action-card-primary:disabled {
+  cursor: not-allowed;
+}
+
+.freepdf-action-card-split:not(:disabled) {
+  cursor: pointer;
+  opacity: 1;
+}
+
+.freepdf-action-card-split:not(:disabled) .freepdf-action-icon {
+  color: #bfffea;
+
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.2);
+}
+
+.freepdf-action-card-split:not(:disabled) b {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.freepdf-action-card-split:not(:disabled) span {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.freepdf-action-card-split:not(:disabled) small {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+
+/* ------------------------------------------------------------
+   SPLIT MODAL
+------------------------------------------------------------ */
+
+.freepdf-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(2, 8, 7, 0.72);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.freepdf-modal {
+  width: min(680px, 100%);
+  max-height: min(900px, calc(100vh - 48px));
+
+  overflow: auto;
+
+  border-radius: 24px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(21, 42, 37, 0.96),
+      rgba(7, 18, 15, 0.97)
+    );
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  color: white;
+}
+
+.freepdf-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 24px;
+
+  padding: 28px 30px 22px;
+
+  border-bottom:
+    1px solid rgba(255, 255, 255, 0.08);
+}
+
+.freepdf-modal-header h2 {
+  margin: 6px 0 7px;
+}
+
+.freepdf-modal-header p {
+  margin: 0;
+
+  color: rgba(255, 255, 255, 0.56);
+
+  line-height: 1.55;
+}
+
+.freepdf-modal-close {
+  width: 40px;
+  height: 40px;
+
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.1);
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  color:
+    rgba(255, 255, 255, 0.7);
+
+  cursor: pointer;
+}
+
+.freepdf-modal-close:hover {
+  color: white;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+}
+
+.freepdf-modal-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.freepdf-modal-body {
+  display: grid;
+  gap: 22px;
+
+  padding: 26px 30px;
+}
+
+
+/* ------------------------------------------------------------
+   FORM FIELDS
+------------------------------------------------------------ */
+
+.freepdf-form-field {
+  display: grid;
+  gap: 9px;
+}
+
+.freepdf-form-field > label {
+  font-size: 12px;
+  font-weight: 700;
+
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  color:
+    rgba(255, 255, 255, 0.68);
+}
+
+.freepdf-form-field select,
+.freepdf-form-field input {
+  width: 100%;
+  box-sizing: border-box;
+
+  min-height: 50px;
+
+  padding: 0 15px;
+
+  border-radius: 13px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.11);
+
+  outline: none;
+
+  background:
+    rgba(255, 255, 255, 0.045);
+
+  color: white;
+
+  font: inherit;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.freepdf-form-field select:focus,
+.freepdf-form-field input:focus {
+  border-color:
+    rgba(0, 255, 170, 0.42);
+
+  background:
+    rgba(0, 255, 170, 0.045);
+
+  box-shadow:
+    0 0 0 3px rgba(0, 255, 170, 0.07);
+}
+
+.freepdf-form-field select option {
+  background: #10221e;
+  color: white;
+}
+
+.freepdf-form-field input::placeholder {
+  color:
+    rgba(255, 255, 255, 0.3);
+}
+
+
+/* ------------------------------------------------------------
+   SPLIT METHOD SELECTOR
+------------------------------------------------------------ */
+
+.freepdf-split-mode-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 12px;
+}
+
+.freepdf-split-mode {
+  min-height: 92px;
+
+  padding: 16px;
+
+  text-align: left;
+
+  border-radius: 15px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.09);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+
+  color: white;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.freepdf-split-mode:hover {
+  transform: translateY(-1px);
+
+  border-color:
+    rgba(255, 255, 255, 0.16);
+
+  background:
+    rgba(255, 255, 255, 0.055);
+}
+
+.freepdf-split-mode.active {
+  border-color:
+    rgba(0, 255, 170, 0.36);
+
+  background:
+    rgba(0, 255, 170, 0.075);
+
+  box-shadow:
+    inset 0 1px 0
+    rgba(255, 255, 255, 0.05);
+}
+
+.freepdf-split-mode span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.freepdf-split-mode small {
+  display: block;
+
+  color:
+    rgba(255, 255, 255, 0.46);
+
+  line-height: 1.4;
+}
+
+
+/* ------------------------------------------------------------
+   RANGE HELP
+------------------------------------------------------------ */
+
+.freepdf-field-help {
+  display: flex;
+
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  align-items: center;
+
+  font-size: 12px;
+
+  color:
+    rgba(255, 255, 255, 0.46);
+}
+
+.freepdf-field-help strong {
+  color:
+    rgba(255, 255, 255, 0.68);
+}
+
+.freepdf-field-help code,
+.freepdf-range-rules code {
+  padding: 2px 6px;
+
+  border-radius: 5px;
+
+  background:
+    rgba(0, 255, 170, 0.08);
+
+  color:
+    rgba(190, 255, 235, 0.9);
+
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+
+/* ------------------------------------------------------------
+   RANGE VALIDATION GUIDE
+------------------------------------------------------------ */
+
+.freepdf-range-rules {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px 14px;
+
+  padding: 13px 14px;
+
+  border-radius: 13px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.07);
+
+  background:
+    rgba(255, 255, 255, 0.025);
+}
+
+.freepdf-range-rules > div {
+  display: flex;
+
+  align-items: center;
+
+  gap: 7px;
+
+  min-width: 0;
+
+  color:
+    rgba(255, 255, 255, 0.5);
+
+  font-size: 11px;
+}
+
+.freepdf-range-rules svg {
+  width: 14px;
+  height: 14px;
+
+  flex: 0 0 auto;
+
+  color:
+    rgba(0, 255, 170, 0.75);
+}
+
+
+/* The invalid examples */
+
+.freepdf-range-rules > div:nth-last-child(-n + 3) svg {
+  color:
+    rgba(255, 190, 120, 0.8);
+}
+
+
+/* ------------------------------------------------------------
+   SELECTED PDF SUMMARY
+------------------------------------------------------------ */
+
+.freepdf-split-summary {
+  display: flex;
+
+  align-items: center;
+
+  gap: 13px;
+
+  padding: 14px;
+
+  border-radius: 14px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+}
+
+.freepdf-split-summary-icon {
+  width: 40px;
+  height: 40px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 11px;
+
+  color: #baffea;
+
+  background:
+    rgba(0, 255, 170, 0.08);
+
+  border:
+    1px solid rgba(0, 255, 170, 0.14);
+}
+
+.freepdf-split-summary-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.freepdf-split-summary strong,
+.freepdf-split-summary span {
+  display: block;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.freepdf-split-summary strong {
+  font-size: 13px;
+}
+
+.freepdf-split-summary span {
+  margin-top: 4px;
+
+  font-size: 11px;
+
+  color:
+    rgba(255, 255, 255, 0.45);
+}
+
+
+/* ------------------------------------------------------------
+   MODAL ERROR
+------------------------------------------------------------ */
+
+.freepdf-modal-error {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 10px;
+
+  padding: 13px 14px;
+
+  border-radius: 12px;
+
+  border:
+    1px solid rgba(255, 170, 100, 0.18);
+
+  background:
+    rgba(255, 150, 80, 0.055);
+
+  color:
+    rgba(255, 220, 190, 0.88);
+
+  font-size: 12px;
+
+  line-height: 1.5;
+}
+
+.freepdf-modal-error svg {
+  width: 17px;
+  height: 17px;
+
+  flex: 0 0 auto;
+
+  margin-top: 1px;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL FOOTER
+------------------------------------------------------------ */
+
+.freepdf-modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 11px;
+
+  padding: 20px 30px 25px;
+
+  border-top:
+    1px solid rgba(255, 255, 255, 0.08);
+}
+
+.freepdf-split-submit {
+  min-width: 145px;
+}
+
+.freepdf-button-spinner {
+  width: 15px;
+  height: 15px;
+
+  border-radius: 50%;
+
+  border:
+    2px solid rgba(255, 255, 255, 0.25);
+
+  border-top-color: white;
+
+  animation:
+    freepdf-spin 700ms linear infinite;
+}
+
+@keyframes freepdf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+/* ------------------------------------------------------------
+   SPLIT OUTPUT LIST
+------------------------------------------------------------ */
+
+.freepdf-output-list {
+  width: 100%;
+
+  display: grid;
+
+  gap: 9px;
+
+  margin-top: 24px;
+
+  max-height: 430px;
+
+  overflow: auto;
+}
+
+.freepdf-output-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 12px;
+
+  border-radius: 13px;
+
+  border:
+    1px solid rgba(255, 255, 255, 0.08);
+
+  background:
+    rgba(255, 255, 255, 0.035);
+}
+
+.freepdf-output-icon {
+  width: 38px;
+  height: 38px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border-radius: 10px;
+
+  color:
+    rgba(190, 255, 235, 0.85);
+
+  background:
+    rgba(0, 255, 170, 0.065);
+}
+
+.freepdf-output-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.freepdf-output-info {
+  flex: 1;
+
+  min-width: 0;
+}
+
+.freepdf-output-info strong,
+.freepdf-output-info span {
+  display: block;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.freepdf-output-info strong {
+  font-size: 12px;
+}
+
+.freepdf-output-info span {
+  margin-top: 3px;
+
+  font-size: 10px;
+
+  color:
+    rgba(255, 255, 255, 0.42);
+}
+
+.freepdf-download-button {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 7px;
+
+  flex: 0 0 auto;
+
+  min-height: 36px;
+
+  padding: 0 12px;
+
+  border-radius: 9px;
+
+  border:
+    1px solid rgba(0, 255, 170, 0.22);
+
+  background:
+    rgba(0, 255, 170, 0.07);
+
+  color:
+    rgba(205, 255, 240, 0.92);
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.freepdf-download-button:hover {
+  border-color:
+    rgba(0, 255, 170, 0.4);
+
+  background:
+    rgba(0, 255, 170, 0.12);
+}
+
+.freepdf-download-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+------------------------------------------------------------ */
+
+@media (max-width: 640px) {
+
+  .freepdf-modal-backdrop {
+    padding: 10px;
+
+    align-items: flex-end;
+  }
+
+  .freepdf-modal {
+    max-height:
+      calc(100vh - 20px);
+
+    border-radius:
+      20px 20px 14px 14px;
+  }
+
+  .freepdf-modal-header {
+    padding:
+      22px 19px 18px;
+  }
+
+  .freepdf-modal-body {
+    padding:
+      20px 19px;
+  }
+
+  .freepdf-modal-footer {
+    padding:
+      17px 19px 20px;
+  }
+
+  .freepdf-split-mode-grid,
+  .freepdf-range-rules {
+    grid-template-columns: 1fr;
+  }
+
+  .freepdf-output-item {
+    align-items: flex-start;
+  }
+
+  .freepdf-download-button span {
+    display: none;
+  }
+
+  .freepdf-download-button {
+    width: 36px;
+
+    padding: 0;
+  }
+}
