@@ -5,13 +5,51 @@ import React, {
   useState,
 } from "react";
 
-import * as pdfjsLib from "pdfjs-dist";
 import { PDFDocument } from "pdf-lib";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+/*
+ * PDF.js is intentionally NOT imported at the top of this file.
+ *
+ * FreePDF must be able to start without PDF.js.
+ *
+ * pdf-lib = authoritative PDF engine
+ * PDF.js  = optional visual thumbnail renderer
+ */
+
+let pdfjsPromise = null;
+
+async function loadPDFJS() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import(
+      "pdfjs-dist/legacy/build/pdf.mjs"
+    )
+      .then((pdfjsLib) => {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          new URL(
+            "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+            import.meta.url
+          ).toString();
+
+        return pdfjsLib;
+      })
+      .catch((error) => {
+        console.warn(
+          "[FreePDF] PDF.js could not be loaded:",
+          error
+        );
+
+        /*
+         * Allow a future PDF to try loading PDF.js
+         * again if the first attempt failed.
+         */
+        pdfjsPromise = null;
+
+        return null;
+      });
+  }
+
+  return pdfjsPromise;
+}
 
 const formatBytes = (bytes) => {
   if (!bytes) return "0 KB";
@@ -22,56 +60,81 @@ const formatBytes = (bytes) => {
     units.length - 1
   );
 
-  return `${(bytes / Math.pow(1024, index)).toFixed(
-    index === 0 ? 0 : 1
-  )} ${units[index]}`;
+  return `${(
+    bytes / Math.pow(1024, index)
+  ).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 };
 
 const makeId = () =>
-  `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 9)}`;
 
 /*
  * IMPORTANT ARCHITECTURE
  *
- * pdf-lib is now the authoritative PDF reader.
+ * pdf-lib is the authoritative PDF reader.
  * PDF.js is ONLY used for visual thumbnails.
  *
- * Therefore, if PDF.js has a Chrome-specific problem,
- * the actual PDF can still be merged/split/etc.
+ * PDF.js is loaded dynamically so a Safari/iOS
+ * compatibility problem cannot prevent FreePDF
+ * from loading.
  */
 async function readPDF(file) {
+  /*
+   * Read the original file.
+   */
   const buffer = await file.arrayBuffer();
 
-  // pdf-lib validates and reads the actual PDF.
-  // It supports ArrayBuffer directly.
-  const pdfDocument = await PDFDocument.load(buffer);
+  /*
+   * pdf-lib validates and reads the PDF.
+   *
+   * This is independent from PDF.js.
+   */
+  const pdfDocument =
+    await PDFDocument.load(buffer);
 
-  const pages = pdfDocument.getPageCount();
-
-  // Keep a fresh independent Uint8Array for future operations.
-  const operationBytes = new Uint8Array(buffer.slice(0));
+  const pages =
+    pdfDocument.getPageCount();
 
   /*
-   * PDF.js preview is deliberately optional.
+   * Keep a fresh independent Uint8Array
+   * for future PDF operations.
+   */
+  const operationBytes =
+    new Uint8Array(buffer.slice(0));
+
+  /*
+   * PDF.js is OPTIONAL.
    *
-   * If Chrome has a PDF.js/worker/decoder problem,
-   * we simply continue without thumbnails.
+   * If PDF.js fails on Safari/iOS/iPadOS,
+   * the PDF remains completely usable.
    */
   let previewPdf = null;
 
   try {
-    const previewBytes = new Uint8Array(buffer.slice(0));
+    const pdfjsLib =
+      await loadPDFJS();
 
-    const loadingTask = pdfjsLib.getDocument({
-      data: previewBytes,
-    });
+    if (pdfjsLib) {
+      const previewBytes =
+        new Uint8Array(buffer.slice(0));
 
-    previewPdf = await loadingTask.promise;
+      const loadingTask =
+        pdfjsLib.getDocument({
+          data: previewBytes,
+        });
+
+      previewPdf =
+        await loadingTask.promise;
+    }
   } catch (previewError) {
     console.warn(
       "[FreePDF] PDF.js preview unavailable:",
       previewError
     );
+
+    previewPdf = null;
   }
 
   return {
@@ -82,11 +145,15 @@ async function readPDF(file) {
     size: file.size,
     pages,
     pdf: previewPdf,
-    previewAvailable: Boolean(previewPdf),
+    previewAvailable:
+      Boolean(previewPdf),
   };
 }
 
-function PDFThumbnail({ pdf, pageNumber }) {
+function PDFThumbnail({
+  pdf,
+  pageNumber,
+}) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -96,42 +163,68 @@ function PDFThumbnail({ pdf, pageNumber }) {
       if (!pdf) return;
 
       try {
-        const page = await pdf.getPage(pageNumber);
+        const page =
+          await pdf.getPage(pageNumber);
 
-        if (cancelled || !canvasRef.current) return;
+        if (
+          cancelled ||
+          !canvasRef.current
+        ) {
+          return;
+        }
 
-        const baseViewport = page.getViewport({
-          scale: 1,
-        });
+        const baseViewport =
+          page.getViewport({
+            scale: 1,
+          });
 
         const targetWidth = 150;
-        const scale = targetWidth / baseViewport.width;
 
-        const viewport = page.getViewport({
-          scale,
-        });
+        const scale =
+          targetWidth /
+          baseViewport.width;
 
-        const canvas = canvasRef.current;
-        const context = canvas.getContext("2d");
+        const viewport =
+          page.getViewport({
+            scale,
+          });
+
+        const canvas =
+          canvasRef.current;
+
+        const context =
+          canvas.getContext("2d");
+
+        if (!context) {
+          throw new Error(
+            "Canvas 2D context unavailable."
+          );
+        }
 
         const outputScale =
           window.devicePixelRatio || 1;
 
-        canvas.width = Math.floor(
-          viewport.width * outputScale
-        );
+        canvas.width =
+          Math.floor(
+            viewport.width *
+              outputScale
+          );
 
-        canvas.height = Math.floor(
-          viewport.height * outputScale
-        );
+        canvas.height =
+          Math.floor(
+            viewport.height *
+              outputScale
+          );
 
-        canvas.style.width = `${Math.floor(
-          viewport.width
-        )}px`;
+        canvas.style.width =
+          `${Math.floor(
+            viewport.width
+          )}px`;
 
-        canvas.style.height = `${Math.floor(
-          viewport.height
-        )}px`;
+        canvas.style.height =
+          `${Math.floor(
+            viewport.height
+          )}px`;
 
         await page.render({
           canvasContext: context,
@@ -199,75 +292,105 @@ function PDFThumbnail({ pdf, pageNumber }) {
 export default function PDFWorkspace() {
   const inputRef = useRef(null);
 
-  const [files, setFiles] = useState([]);
-  const [dragging, setDragging] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [processing, setProcessing] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(null);
+  const [files, setFiles] =
+    useState([]);
 
-  const addFiles = useCallback(async (incomingFiles) => {
-    const selected = Array.from(
-      incomingFiles || []
-    );
+  const [dragging, setDragging] =
+    useState(false);
 
-    const pdfFiles = selected.filter(
-      (file) =>
-        file.type === "application/pdf" ||
-        file.name
-          .toLowerCase()
-          .endsWith(".pdf")
-    );
+  const [loading, setLoading] =
+    useState(false);
 
-    if (!pdfFiles.length) {
-      setError(
-        "Please choose one or more PDF files."
-      );
-      return;
-    }
+  const [processing, setProcessing] =
+    useState(false);
 
-    setError("");
-    setSuccess(null);
-    setLoading(true);
+  const [error, setError] =
+    useState("");
 
-    try {
-      const loaded = [];
+  const [success, setSuccess] =
+    useState(null);
 
-      for (const file of pdfFiles) {
-        try {
-          const pdf = await readPDF(file);
-          loaded.push(pdf);
-        } catch (readError) {
-          console.error(
-            "[FreePDF] PDF validation failed:",
-            file.name,
-            readError
-          );
+  const addFiles = useCallback(
+    async (incomingFiles) => {
+      const selected =
+        Array.from(
+          incomingFiles || []
+        );
 
-          setError(
-            `FreePDF couldn't read "${file.name}". The PDF may be damaged, encrypted, or unsupported by pdf-lib.`
+      const pdfFiles =
+        selected.filter(
+          (file) =>
+            file.type ===
+              "application/pdf" ||
+            file.name
+              .toLowerCase()
+              .endsWith(".pdf")
+        );
+
+      if (!pdfFiles.length) {
+        setError(
+          "Please choose one or more PDF files."
+        );
+
+        return;
+      }
+
+      setError("");
+      setSuccess(null);
+      setLoading(true);
+
+      try {
+        const loaded = [];
+
+        for (const file of pdfFiles) {
+          try {
+            const pdf =
+              await readPDF(file);
+
+            loaded.push(pdf);
+          } catch (readError) {
+            console.error(
+              "[FreePDF] PDF validation failed:",
+              file.name,
+              readError
+            );
+
+            setError(
+              `FreePDF couldn't read "${file.name}". The PDF may be damaged, encrypted, or unsupported by pdf-lib.`
+            );
+          }
+        }
+
+        if (loaded.length) {
+          setFiles(
+            (current) => [
+              ...current,
+              ...loaded,
+            ]
           );
         }
+      } finally {
+        setLoading(false);
       }
+    },
+    []
+  );
 
-      if (loaded.length) {
-        setFiles((current) => [
-          ...current,
-          ...loaded,
-        ]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const handleInput = async (
+    event
+  ) => {
+    await addFiles(
+      event.target.files
+    );
 
-  const handleInput = async (event) => {
-    await addFiles(event.target.files);
     event.target.value = "";
   };
 
-  const handleDrop = async (event) => {
+  const handleDrop = async (
+    event
+  ) => {
     event.preventDefault();
+
     setDragging(false);
 
     await addFiles(
@@ -276,10 +399,12 @@ export default function PDFWorkspace() {
   };
 
   const removeFile = (id) => {
-    setFiles((current) =>
-      current.filter(
-        (item) => item.id !== id
-      )
+    setFiles(
+      (current) =>
+        current.filter(
+          (item) =>
+            item.id !== id
+        )
     );
 
     setSuccess(null);
@@ -291,23 +416,33 @@ export default function PDFWorkspace() {
     setSuccess(null);
   };
 
-  const totalPages = files.reduce(
-    (total, item) =>
-      total + item.pages,
-    0
-  );
+  const totalPages =
+    files.reduce(
+      (total, item) =>
+        total + item.pages,
+      0
+    );
 
-  const totalSize = files.reduce(
-    (total, item) =>
-      total + item.size,
-    0
-  );
+  const totalSize =
+    files.reduce(
+      (total, item) =>
+        total + item.size,
+      0
+    );
 
+  /*
+   * MERGE
+   *
+   * This is the known-good implementation.
+   * Do not change this unless we intentionally
+   * modify Merge in the future.
+   */
   const mergePDFs = async () => {
     if (files.length < 2) {
       setError(
         "Add at least two PDF files to merge them."
       );
+
       return;
     }
 
@@ -322,6 +457,7 @@ export default function PDFWorkspace() {
       for (const item of files) {
         /*
          * Create a fresh copy for every load.
+         *
          * This prevents one operation from
          * affecting another.
          */
@@ -341,20 +477,24 @@ export default function PDFWorkspace() {
             sourcePdf.getPageIndices()
           );
 
-        copiedPages.forEach((page) => {
-          mergedPdf.addPage(page);
-        });
+        copiedPages.forEach(
+          (page) => {
+            mergedPdf.addPage(page);
+          }
+        );
       }
 
       const mergedBytes =
         await mergedPdf.save();
 
-      const blob = new Blob(
-        [mergedBytes],
-        {
-          type: "application/pdf",
-        }
-      );
+      const blob =
+        new Blob(
+          [mergedBytes],
+          {
+            type:
+              "application/pdf",
+          }
+        );
 
       const url =
         URL.createObjectURL(blob);
@@ -365,7 +505,8 @@ export default function PDFWorkspace() {
           "FreeToolz-Merged.pdf",
         size:
           mergedBytes.byteLength,
-        pages: totalPages,
+        pages:
+          totalPages,
       });
     } catch (mergeError) {
       console.error(
@@ -387,12 +528,18 @@ export default function PDFWorkspace() {
     const link =
       document.createElement("a");
 
-    link.href = success.url;
+    link.href =
+      success.url;
+
     link.download =
       success.filename;
 
-    document.body.appendChild(link);
+    document.body.appendChild(
+      link
+    );
+
     link.click();
+
     link.remove();
   };
 
@@ -413,10 +560,10 @@ export default function PDFWorkspace() {
       id="freepdf-workspace"
     >
       <div className="freepdf-workspace-orb freepdf-workspace-orb-one" />
+
       <div className="freepdf-workspace-orb freepdf-workspace-orb-two" />
 
       <div className="freepdf-workspace-inner">
-
         {!success ? (
           <>
             <div className="freepdf-workspace-heading">
@@ -446,7 +593,9 @@ export default function PDFWorkspace() {
                 <button
                   type="button"
                   className="freepdf-clear-button"
-                  onClick={clearAll}
+                  onClick={
+                    clearAll
+                  }
                 >
                   Clear workspace
                 </button>
@@ -463,7 +612,9 @@ export default function PDFWorkspace() {
                   ? "has-files"
                   : ""
               }`}
-              onDragEnter={(event) => {
+              onDragEnter={(
+                event
+              ) => {
                 event.preventDefault();
                 setDragging(true);
               }}
@@ -479,7 +630,9 @@ export default function PDFWorkspace() {
                   setDragging(false);
                 }
               }}
-              onDrop={handleDrop}
+              onDrop={
+                handleDrop
+              }
             >
               <input
                 ref={inputRef}
@@ -487,7 +640,9 @@ export default function PDFWorkspace() {
                 accept="application/pdf,.pdf"
                 multiple
                 hidden
-                onChange={handleInput}
+                onChange={
+                  handleInput
+                }
               />
 
               <div className="freepdf-upload-icon">
@@ -527,16 +682,24 @@ export default function PDFWorkspace() {
                 }
               >
                 Choose PDF files
-                <span>→</span>
+                <span>
+                  →
+                </span>
               </button>
 
               <div className="freepdf-upload-meta">
-                <span>PDF only</span>
+                <span>
+                  PDF only
+                </span>
+
                 <i />
+
                 <span>
                   Multiple files supported
                 </span>
+
                 <i />
+
                 <span>
                   Browser-side
                 </span>
@@ -545,6 +708,7 @@ export default function PDFWorkspace() {
               {loading && (
                 <div className="freepdf-loading">
                   <span className="freepdf-spinner" />
+
                   Reading your PDF...
                 </div>
               )}
@@ -552,7 +716,10 @@ export default function PDFWorkspace() {
 
             {error && (
               <div className="freepdf-error">
-                <span>!</span>
+                <span>
+                  !
+                </span>
+
                 {error}
               </div>
             )}
@@ -564,9 +731,11 @@ export default function PDFWorkspace() {
                     <strong>
                       {files.length}
                     </strong>
+
                     <span>
                       PDF
-                      {files.length !== 1
+                      {files.length !==
+                      1
                         ? "s"
                         : ""}
                     </span>
@@ -578,6 +747,7 @@ export default function PDFWorkspace() {
                     <strong>
                       {totalPages}
                     </strong>
+
                     <span>
                       Pages
                     </span>
@@ -591,6 +761,7 @@ export default function PDFWorkspace() {
                         totalSize
                       )}
                     </strong>
+
                     <span>
                       Total size
                     </span>
@@ -599,14 +770,20 @@ export default function PDFWorkspace() {
 
                 <div className="freepdf-file-list">
                   {files.map(
-                    (item, index) => (
+                    (
+                      item,
+                      index
+                    ) => (
                       <article
                         className="freepdf-file-card"
-                        key={item.id}
+                        key={
+                          item.id
+                        }
                       >
                         <div className="freepdf-file-number">
                           {String(
-                            index + 1
+                            index +
+                              1
                           ).padStart(
                             2,
                             "0"
@@ -631,14 +808,21 @@ export default function PDFWorkspace() {
 
                         <div className="freepdf-file-info">
                           <strong
-                            title={item.name}
+                            title={
+                              item.name
+                            }
                           >
-                            {item.name}
+                            {
+                              item.name
+                            }
                           </strong>
 
                           <span>
-                            {item.pages}{" "}
-                            {item.pages === 1
+                            {
+                              item.pages
+                            }{" "}
+                            {item.pages ===
+                            1
                               ? "page"
                               : "pages"}{" "}
                             ·{" "}
@@ -678,8 +862,11 @@ export default function PDFWorkspace() {
                     </div>
 
                     <span className="freepdf-preview-count">
-                      {totalPages}{" "}
-                      {totalPages === 1
+                      {
+                        totalPages
+                      }{" "}
+                      {totalPages ===
+                      1
                         ? "page"
                         : "pages"}
                     </span>
@@ -687,13 +874,18 @@ export default function PDFWorkspace() {
 
                   <div className="freepdf-pages-grid">
                     {files.flatMap(
-                      (file) =>
+                      (
+                        file
+                      ) =>
                         Array.from(
                           {
                             length:
                               file.pages,
                           },
-                          (_, index) => (
+                          (
+                            _,
+                            index
+                          ) => (
                             <div
                               className="freepdf-page-card"
                               key={`${file.id}-${index + 1}`}
@@ -704,7 +896,8 @@ export default function PDFWorkspace() {
                                     file.pdf
                                   }
                                   pageNumber={
-                                    index + 1
+                                    index +
+                                    1
                                   }
                                 />
 
@@ -714,11 +907,16 @@ export default function PDFWorkspace() {
                               <div className="freepdf-page-footer">
                                 <span>
                                   Page{" "}
-                                  {index + 1}
+                                  {
+                                    index +
+                                    1
+                                  }
                                 </span>
 
                                 <span className="freepdf-page-source">
-                                  {file.name}
+                                  {
+                                    file.name
+                                  }
                                 </span>
                               </div>
                             </div>
@@ -764,7 +962,9 @@ export default function PDFWorkspace() {
                         Combine your PDFs
                       </small>
 
-                      <b>→</b>
+                      <b>
+                        →
+                      </b>
                     </button>
 
                     <button
@@ -780,7 +980,9 @@ export default function PDFWorkspace() {
                         Coming next
                       </small>
 
-                      <b>→</b>
+                      <b>
+                        →
+                      </b>
                     </button>
 
                     <button
@@ -796,7 +998,9 @@ export default function PDFWorkspace() {
                         Coming next
                       </small>
 
-                      <b>→</b>
+                      <b>
+                        →
+                      </b>
                     </button>
 
                     <button
@@ -812,7 +1016,9 @@ export default function PDFWorkspace() {
                         Coming next
                       </small>
 
-                      <b>→</b>
+                      <b>
+                        →
+                      </b>
                     </button>
                   </div>
                 </div>
@@ -863,7 +1069,9 @@ export default function PDFWorkspace() {
             <h2>
               Your PDF is
               <br />
-              <span>ready.</span>
+              <span>
+                ready.
+              </span>
             </h2>
 
             <p>
@@ -892,11 +1100,16 @@ export default function PDFWorkspace() {
 
               <div className="freepdf-result-info">
                 <strong>
-                  {success.filename}
+                  {
+                    success.filename
+                  }
                 </strong>
 
                 <span>
-                  {success.pages} pages ·{" "}
+                  {
+                    success.pages
+                  }{" "}
+                  pages ·{" "}
                   {formatBytes(
                     success.size
                   )}
@@ -911,7 +1124,9 @@ export default function PDFWorkspace() {
                 }
               >
                 Download
-                <span>↓</span>
+                <span>
+                  ↓
+                </span>
               </button>
             </div>
 
