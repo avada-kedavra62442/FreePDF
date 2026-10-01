@@ -1103,13 +1103,14 @@ export default function PDFWorkspace() {
       <strong>Something needs attention</strong>
       <p>{error}</p>
     </div>
-    <button
-      type="button"
-      onClick={() => setError("")}
-      aria-label="Dismiss error"
-    >
-      <XIcon />
-    </button>
+<button
+  type="button"
+  className="freepdf-error-dismiss"
+  onClick={() => setError("")}
+  aria-label="Dismiss error"
+>
+  <XIcon />
+</button>
   </div>
 )}
                 </div>
