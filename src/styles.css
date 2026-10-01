@@ -2247,6 +2247,7 @@ a {
 .freepdf-eyebrow,
 .freepdf-preview-label {
   display: flex;
+  margin-top: 32px;
   align-items: center;
   gap: 9px;
   color: #8eeac1;
@@ -4203,4 +4204,36 @@ a {
 .freepdf-workspace,
 .freepdf-success {
   scroll-margin-top: 110px;
+}
+
+.freepdf-error-dismiss {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.freepdf-error-dismiss:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.05);
+}
+
+.freepdf-error-dismiss:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.freepdf-error-dismiss svg {
+  width: 17px;
+  height: 17px;
 }
