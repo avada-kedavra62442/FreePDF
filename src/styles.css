@@ -4206,34 +4206,60 @@ a {
   scroll-margin-top: 110px;
 }
 
-.freepdf-error-dismiss {
+/* Error dismiss button */
+.freepdf-error > button.freepdf-error-dismiss {
+  appearance: none;
+  -webkit-appearance: none;
+
   display: grid;
   place-items: center;
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
+
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
   padding: 0;
-  border: 0;
+  margin-left: auto;
+
+  border: 1px solid transparent;
   border-radius: 10px;
-  background: transparent;
-  color: inherit;
+
+  background: transparent !important;
+  color: rgba(255, 215, 215, 0.55) !important;
+
+  box-shadow: none !important;
+  outline: none;
+
   cursor: pointer;
+  flex-shrink: 0;
+
   transition:
-    background-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
     transform 0.2s ease;
 }
 
-.freepdf-error-dismiss:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: scale(1.05);
+.freepdf-error > button.freepdf-error-dismiss:hover {
+  color: #ffdede !important;
+  background: rgba(255, 90, 90, 0.08) !important;
+  border-color: rgba(255, 120, 120, 0.12);
+  transform: scale(1.04);
 }
 
-.freepdf-error-dismiss:focus-visible {
-  outline: 2px solid currentColor;
+.freepdf-error > button.freepdf-error-dismiss:active {
+  transform: scale(0.96);
+}
+
+.freepdf-error > button.freepdf-error-dismiss:focus-visible {
+  outline: 2px solid rgba(115, 232, 186, 0.55);
   outline-offset: 2px;
 }
 
-.freepdf-error-dismiss svg {
-  width: 17px;
-  height: 17px;
+.freepdf-error > button.freepdf-error-dismiss svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: currentColor;
+  stroke: currentColor;
+  stroke-width: 2;
 }
