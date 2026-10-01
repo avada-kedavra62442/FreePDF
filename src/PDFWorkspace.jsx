@@ -1,3 +1,4 @@
+```jsx
 import React, {
   useCallback,
   useEffect,
@@ -69,6 +70,156 @@ const makeId = () =>
   `${Date.now()}-${Math.random()
     .toString(36)
     .slice(2, 9)}`;
+
+/*
+ * Convert a filename into a safe base name.
+ *
+ * Example:
+ * "My Report.pdf"
+ * -> "My Report"
+ */
+const getBaseName = (filename) =>
+  filename
+    .replace(/\.pdf$/i, "")
+    .trim() || "Document";
+
+/*
+ * Convert page/range input into a list of page numbers.
+ *
+ * Examples:
+ *
+ * "1-3"
+ * -> [1, 2, 3]
+ *
+ * "1-3, 7, 9-10"
+ * -> [1, 2, 3, 7, 9, 10]
+ */
+function parsePageRanges(input, totalPages) {
+  const value = String(input || "").trim();
+
+  if (!value) {
+    return {
+      pages: null,
+      error:
+        "Enter at least one page or page range, for example 1-3, 5, 8-10.",
+    };
+  }
+
+  const parts = value
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (!parts.length) {
+    return {
+      pages: null,
+      error:
+        "Enter at least one page or page range, for example 1-3, 5, 8-10.",
+    };
+  }
+
+  const pages = [];
+  const seen = new Set();
+
+  for (const part of parts) {
+    /*
+     * Single page:
+     * "5"
+     */
+    if (/^\d+$/.test(part)) {
+      const page = Number(part);
+
+      if (
+        page < 1 ||
+        page > totalPages
+      ) {
+        return {
+          pages: null,
+          error: `Page ${page} is outside this PDF. It contains ${totalPages} ${
+            totalPages === 1 ? "page" : "pages"
+          }.`,
+        };
+      }
+
+      if (seen.has(page)) {
+        return {
+          pages: null,
+          error: `Page ${page} appears more than once. Remove duplicate pages or overlapping ranges.`,
+        };
+      }
+
+      seen.add(page);
+      pages.push(page);
+      continue;
+    }
+
+    /*
+     * Range:
+     * "3-7"
+     */
+    const rangeMatch =
+      part.match(/^(\d+)\s*-\s*(\d+)$/);
+
+    if (rangeMatch) {
+      const start = Number(
+        rangeMatch[1]
+      );
+
+      const end = Number(
+        rangeMatch[2]
+      );
+
+      if (
+        start < 1 ||
+        end < 1 ||
+        start > totalPages ||
+        end > totalPages
+      ) {
+        return {
+          pages: null,
+          error: `Range "${part}" is outside this PDF. It contains ${totalPages} ${
+            totalPages === 1 ? "page" : "pages"
+          }.`,
+        };
+      }
+
+      if (start > end) {
+        return {
+          pages: null,
+          error: `Range "${part}" is backwards. Use ${end}-${start} instead.`,
+        };
+      }
+
+      for (
+        let page = start;
+        page <= end;
+        page += 1
+      ) {
+        if (seen.has(page)) {
+          return {
+            pages: null,
+            error: `Page ${page} is included more than once because your ranges overlap.`,
+          };
+        }
+
+        seen.add(page);
+        pages.push(page);
+      }
+
+      continue;
+    }
+
+    return {
+      pages: null,
+      error: `"${part}" isn't a valid page or range. Use formats such as 3 or 2-6.`,
+    };
+  }
+
+  return {
+    pages,
+    error: "",
+  };
+}
 
 /*
  * IMPORTANT ARCHITECTURE
@@ -310,6 +461,37 @@ export default function PDFWorkspace() {
   const [success, setSuccess] =
     useState(null);
 
+  /*
+   * SPLIT STATE
+   *
+   * splitOpen:
+   * Shows the Split configuration panel.
+   *
+   * splitSourceId:
+   * Which uploaded PDF should be split.
+   *
+   * splitMode:
+   * "pages"  = every page becomes its own PDF.
+   * "ranges" = custom ranges become separate PDFs.
+   *
+   * splitRanges:
+   * User-entered page/range expression.
+   */
+  const [splitOpen, setSplitOpen] =
+    useState(false);
+
+  const [splitSourceId, setSplitSourceId] =
+    useState("");
+
+  const [splitMode, setSplitMode] =
+    useState("pages");
+
+  const [splitRanges, setSplitRanges] =
+    useState("");
+
+  /*
+   * Add files.
+   */
   const addFiles = useCallback(
     async (incomingFiles) => {
       const selected =
@@ -407,13 +589,49 @@ export default function PDFWorkspace() {
         )
     );
 
+    /*
+     * If the removed file was selected
+     * for Split, reset the selection.
+     */
+    setSplitSourceId(
+      (current) =>
+        current === id
+          ? ""
+          : current
+    );
+
     setSuccess(null);
   };
 
   const clearAll = () => {
+    /*
+     * Revoke generated result URLs
+     * before clearing them.
+     */
+    if (success?.outputs) {
+      success.outputs.forEach(
+        (output) => {
+          if (output.url) {
+            URL.revokeObjectURL(
+              output.url
+            );
+          }
+        }
+      );
+    }
+
+    if (success?.url) {
+      URL.revokeObjectURL(
+        success.url
+      );
+    }
+
     setFiles([]);
     setError("");
     setSuccess(null);
+    setSplitOpen(false);
+    setSplitSourceId("");
+    setSplitRanges("");
   };
 
   const totalPages =
@@ -479,7 +697,9 @@ export default function PDFWorkspace() {
 
         copiedPages.forEach(
           (page) => {
-            mergedPdf.addPage(page);
+            mergedPdf.addPage(
+              page
+            );
           }
         );
       }
@@ -500,6 +720,7 @@ export default function PDFWorkspace() {
         URL.createObjectURL(blob);
 
       setSuccess({
+        operation: "merge",
         url,
         filename:
           "FreeToolz-Merged.pdf",
@@ -522,6 +743,394 @@ export default function PDFWorkspace() {
     }
   };
 
+  /*
+   * OPEN SPLIT
+   *
+   * Split works on ONE PDF at a time.
+   */
+  const openSplit = () => {
+    if (!files.length) {
+      setError(
+        "Add a PDF before splitting it."
+      );
+
+      return;
+    }
+
+    setError("");
+    setSuccess(null);
+
+    /*
+     * Default to the first PDF.
+     */
+    setSplitSourceId(
+      (current) =>
+        current ||
+        files[0]?.id ||
+        ""
+    );
+
+    setSplitMode("pages");
+    setSplitRanges("");
+    setSplitOpen(true);
+  };
+
+  /*
+   * CLOSE SPLIT CONFIGURATION.
+   */
+  const closeSplit = () => {
+    if (processing) return;
+
+    setSplitOpen(false);
+    setError("");
+  };
+
+  /*
+   * SPLIT PDF
+   *
+   * "pages":
+   * Every page becomes a separate PDF.
+   *
+   * "ranges":
+   * Every comma-separated page/range expression
+   * becomes a separate PDF.
+   *
+   * Example:
+   *
+   * 1-3, 4-7, 8-12
+   *
+   * produces:
+   *
+   * pages 1-3
+   * pages 4-7
+   * pages 8-12
+   */
+  const splitPDF = async () => {
+    if (!splitSourceId) {
+      setError(
+        "Choose a PDF to split."
+      );
+
+      return;
+    }
+
+    const source =
+      files.find(
+        (item) =>
+          item.id ===
+          splitSourceId
+      );
+
+    if (!source) {
+      setError(
+        "The selected PDF is no longer available. Choose another PDF."
+      );
+
+      return;
+    }
+
+    setError("");
+    setSuccess(null);
+    setProcessing(true);
+
+    try {
+      /*
+       * Reload from a fresh independent byte copy.
+       */
+      const sourceBytes =
+        new Uint8Array(
+          source.buffer.slice(0)
+        );
+
+      const sourcePdf =
+        await PDFDocument.load(
+          sourceBytes
+        );
+
+      const pageCount =
+        sourcePdf.getPageCount();
+
+      let groups = [];
+
+      /*
+       * MODE 1:
+       * Every page gets its own output.
+       */
+      if (splitMode === "pages") {
+        groups = Array.from(
+          {
+            length:
+              pageCount,
+          },
+          (_, index) => [
+            index + 1,
+          ]
+        );
+      }
+
+      /*
+       * MODE 2:
+       * User-defined ranges.
+       */
+      if (splitMode === "ranges") {
+        const parsed =
+          parsePageRanges(
+            splitRanges,
+            pageCount
+          );
+
+        if (parsed.error) {
+          setError(
+            parsed.error
+          );
+
+          setProcessing(false);
+
+          return;
+        }
+
+        /*
+         * Turn each comma-separated
+         * section into its own group.
+         *
+         * We parse again here because the
+         * validation function intentionally
+         * returns the flattened page list.
+         */
+        groups =
+          splitRanges
+            .split(",")
+            .map(
+              (part) =>
+                part.trim()
+            )
+            .filter(Boolean)
+            .map(
+              (part) => {
+                if (
+                  /^\d+$/.test(
+                    part
+                  )
+                ) {
+                  return [
+                    Number(part),
+                  ];
+                }
+
+                const match =
+                  part.match(
+                    /^(\d+)\s*-\s*(\d+)$/
+                  );
+
+                if (!match) {
+                  return [];
+                }
+
+                const start =
+                  Number(
+                    match[1]
+                  );
+
+                const end =
+                  Number(
+                    match[2]
+                  );
+
+                return Array.from(
+                  {
+                    length:
+                      end -
+                      start +
+                      1,
+                  },
+                  (
+                    _,
+                    index
+                  ) =>
+                    start +
+                    index
+                );
+              }
+            );
+      }
+
+      if (!groups.length) {
+        setError(
+          "No pages were selected for splitting."
+        );
+
+        setProcessing(false);
+
+        return;
+      }
+
+      const baseName =
+        getBaseName(
+          source.name
+        );
+
+      const outputs = [];
+
+      /*
+       * Create every requested PDF.
+       */
+      for (
+        let index = 0;
+        index < groups.length;
+        index += 1
+      ) {
+        const pageNumbers =
+          groups[index];
+
+        if (
+          !pageNumbers.length
+        ) {
+          continue;
+        }
+
+        const outputPdf =
+          await PDFDocument.create();
+
+        const zeroBasedIndices =
+          pageNumbers.map(
+            (page) =>
+              page - 1
+          );
+
+        const copiedPages =
+          await outputPdf.copyPages(
+            sourcePdf,
+            zeroBasedIndices
+          );
+
+        copiedPages.forEach(
+          (page) => {
+            outputPdf.addPage(
+              page
+            );
+          }
+        );
+
+        const outputBytes =
+          await outputPdf.save();
+
+        const blob =
+          new Blob(
+            [outputBytes],
+            {
+              type:
+                "application/pdf",
+            }
+          );
+
+        const url =
+          URL.createObjectURL(
+            blob
+          );
+
+        /*
+         * Filename examples:
+         *
+         * Report-Page-01.pdf
+         * Report-Pages-1-3.pdf
+         */
+        let suffix = "";
+
+        if (
+          pageNumbers.length ===
+          1
+        ) {
+          suffix =
+            `Page-${String(
+              pageNumbers[0]
+            ).padStart(
+              2,
+              "0"
+            )}`;
+        } else {
+          suffix =
+            `Pages-${pageNumbers[0]}-${pageNumbers[
+              pageNumbers.length -
+                1
+            ]}`;
+        }
+
+        outputs.push({
+          id: makeId(),
+          url,
+          filename:
+            `${baseName}-${suffix}.pdf`,
+          size:
+            outputBytes.byteLength,
+          pages:
+            pageNumbers.length,
+          pageNumbers,
+        });
+      }
+
+      setSplitOpen(false);
+
+      setSuccess({
+        operation: "split",
+        sourceName:
+          source.name,
+        sourcePages:
+          pageCount,
+        outputs,
+        totalOutputPages:
+          outputs.reduce(
+            (total, output) =>
+              total +
+              output.pages,
+            0
+          ),
+      });
+    } catch (splitError) {
+      console.error(
+        "[FreePDF] PDF split failed:",
+        splitError
+      );
+
+      setError(
+        "FreePDF couldn't split this PDF. It may be encrypted, damaged, or unsupported by pdf-lib."
+      );
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  /*
+   * Download one Split output.
+   */
+  const downloadSplitOutput = (
+    output
+  ) => {
+    if (!output?.url) return;
+
+    const link =
+      document.createElement("a");
+
+    link.href =
+      output.url;
+
+    link.download =
+      output.filename;
+
+    link.rel =
+      "noopener";
+
+    document.body.appendChild(
+      link
+    );
+
+    link.click();
+
+    link.remove();
+  };
+
+  /*
+   * Download Merge result.
+   */
   const downloadResult = () => {
     if (!success?.url) return;
 
@@ -543,7 +1152,25 @@ export default function PDFWorkspace() {
     link.remove();
   };
 
+  /*
+   * Return to the workspace.
+   */
   const startAgain = () => {
+    /*
+     * Revoke all generated URLs.
+     */
+    if (success?.outputs) {
+      success.outputs.forEach(
+        (output) => {
+          if (output.url) {
+            URL.revokeObjectURL(
+              output.url
+            );
+          }
+        }
+      );
+    }
+
     if (success?.url) {
       URL.revokeObjectURL(
         success.url
@@ -552,7 +1179,44 @@ export default function PDFWorkspace() {
 
     setSuccess(null);
     setError("");
+    setSplitOpen(false);
   };
+
+  /*
+   * Cleanup generated object URLs
+   * if the component itself is removed.
+   */
+  useEffect(() => {
+    return () => {
+      if (success?.outputs) {
+        success.outputs.forEach(
+          (output) => {
+            if (output.url) {
+              URL.revokeObjectURL(
+                output.url
+              );
+            }
+          }
+        );
+      }
+
+      if (success?.url) {
+        URL.revokeObjectURL(
+          success.url
+        );
+      }
+    };
+  }, [success]);
+
+  /*
+   * Find currently selected Split PDF.
+   */
+  const splitSource =
+    files.find(
+      (item) =>
+        item.id ===
+        splitSourceId
+    );
 
   return (
     <section
@@ -926,102 +1590,596 @@ export default function PDFWorkspace() {
                   </div>
                 </div>
 
-                <div className="freepdf-action-panel">
-                  <div>
-                    <span className="freepdf-preview-label">
-                      PDF ACTIONS
-                    </span>
+                {!splitOpen && (
+                  <div className="freepdf-action-panel">
+                    <div>
+                      <span className="freepdf-preview-label">
+                        PDF ACTIONS
+                      </span>
 
-                    <h3>
-                      What do you want to do?
-                    </h3>
+                      <h3>
+                        What do you want to do?
+                      </h3>
 
-                    <p>
-                      Choose an operation for
-                      the PDFs currently in your
-                      workspace.
-                    </p>
+                      <p>
+                        Choose an operation for
+                        the PDFs currently in your
+                        workspace.
+                      </p>
+                    </div>
+
+                    <div className="freepdf-action-grid">
+                      <button
+                        type="button"
+                        className="freepdf-action-card freepdf-action-primary"
+                        onClick={
+                          mergePDFs
+                        }
+                        disabled={
+                          processing
+                        }
+                      >
+                        <span>
+                          Merge
+                        </span>
+
+                        <small>
+                          Combine your PDFs
+                        </small>
+
+                        <b>
+                          →
+                        </b>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="freepdf-action-card"
+                        onClick={
+                          openSplit
+                        }
+                        disabled={
+                          processing
+                        }
+                      >
+                        <span>
+                          Split
+                        </span>
+
+                        <small>
+                          Divide a PDF into parts
+                        </small>
+
+                        <b>
+                          →
+                        </b>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="freepdf-action-card"
+                        disabled
+                      >
+                        <span>
+                          Extract
+                        </span>
+
+                        <small>
+                          Coming next
+                        </small>
+
+                        <b>
+                          →
+                        </b>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="freepdf-action-card"
+                        disabled
+                      >
+                        <span>
+                          Compress
+                        </span>
+
+                        <small>
+                          Coming next
+                        </small>
+
+                        <b>
+                          →
+                        </b>
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  <div className="freepdf-action-grid">
-                    <button
-                      type="button"
-                      className="freepdf-action-card freepdf-action-primary"
-                      onClick={
-                        mergePDFs
-                      }
-                      disabled={
-                        processing
-                      }
-                    >
-                      <span>
-                        Merge
+                {splitOpen && (
+                  <div
+                    className="freepdf-action-panel"
+                    style={{
+                      marginTop:
+                        "24px",
+                    }}
+                  >
+                    <div>
+                      <span className="freepdf-preview-label">
+                        SPLIT PDF
                       </span>
 
-                      <small>
-                        Combine your PDFs
-                      </small>
+                      <h3>
+                        Divide your document.
+                      </h3>
 
-                      <b>
-                        →
-                      </b>
-                    </button>
+                      <p>
+                        Choose one PDF and decide
+                        how its pages should be
+                        separated. Everything stays
+                        inside your browser.
+                      </p>
+                    </div>
 
-                    <button
-                      type="button"
-                      className="freepdf-action-card"
-                      disabled
+                    <div
+                      style={{
+                        display:
+                          "grid",
+                        gap:
+                          "18px",
+                        marginTop:
+                          "24px",
+                      }}
                     >
-                      <span>
-                        Split
-                      </span>
+                      <div>
+                        <label
+                          htmlFor="freepdf-split-source"
+                          style={{
+                            display:
+                              "block",
+                            marginBottom:
+                              "8px",
+                            fontSize:
+                              "12px",
+                            fontWeight:
+                              700,
+                            letterSpacing:
+                              "0.12em",
+                            textTransform:
+                              "uppercase",
+                            opacity:
+                              0.65,
+                          }}
+                        >
+                          SOURCE PDF
+                        </label>
 
-                      <small>
-                        Coming next
-                      </small>
+                        <select
+                          id="freepdf-split-source"
+                          value={
+                            splitSourceId
+                          }
+                          onChange={(
+                            event
+                          ) =>
+                            setSplitSourceId(
+                              event
+                                .target
+                                .value
+                            )
+                          }
+                          style={{
+                            width:
+                              "100%",
+                            minHeight:
+                              "48px",
+                            padding:
+                              "0 14px",
+                            borderRadius:
+                              "12px",
+                            border:
+                              "1px solid rgba(255,255,255,0.14)",
+                            background:
+                              "rgba(255,255,255,0.06)",
+                            color:
+                              "inherit",
+                            font:
+                              "inherit",
+                            outline:
+                              "none",
+                          }}
+                        >
+                          {files.map(
+                            (
+                              file
+                            ) => (
+                              <option
+                                key={
+                                  file.id
+                                }
+                                value={
+                                  file.id
+                                }
+                                style={{
+                                  background:
+                                    "#101916",
+                                  color:
+                                    "#fff",
+                                }}
+                              >
+                                {
+                                  file.name
+                                }{" "}
+                                —{" "}
+                                {
+                                  file.pages
+                                }{" "}
+                                {file.pages ===
+                                1
+                                  ? "page"
+                                  : "pages"}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </div>
 
-                      <b>
-                        →
-                      </b>
-                    </button>
+                      <div>
+                        <label
+                          style={{
+                            display:
+                              "block",
+                            marginBottom:
+                              "10px",
+                            fontSize:
+                              "12px",
+                            fontWeight:
+                              700,
+                            letterSpacing:
+                              "0.12em",
+                            textTransform:
+                              "uppercase",
+                            opacity:
+                              0.65,
+                          }}
+                        >
+                          SPLIT METHOD
+                        </label>
 
-                    <button
-                      type="button"
-                      className="freepdf-action-card"
-                      disabled
-                    >
-                      <span>
-                        Extract
-                      </span>
+                        <div
+                          style={{
+                            display:
+                              "grid",
+                            gridTemplateColumns:
+                              "repeat(auto-fit, minmax(210px, 1fr))",
+                            gap:
+                              "12px",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSplitMode(
+                                "pages"
+                              )
+                            }
+                            style={{
+                              textAlign:
+                                "left",
+                              padding:
+                                "18px",
+                              borderRadius:
+                                "14px",
+                              border:
+                                splitMode ===
+                                "pages"
+                                  ? "1px solid rgba(0,255,170,0.5)"
+                                  : "1px solid rgba(255,255,255,0.1)",
+                              background:
+                                splitMode ===
+                                "pages"
+                                  ? "rgba(0,255,170,0.08)"
+                                  : "rgba(255,255,255,0.035)",
+                              color:
+                                "inherit",
+                              cursor:
+                                "pointer",
+                              font:
+                                "inherit",
+                            }}
+                          >
+                            <strong
+                              style={{
+                                display:
+                                  "block",
+                                marginBottom:
+                                  "6px",
+                              }}
+                            >
+                              Every page
+                            </strong>
 
-                      <small>
-                        Coming next
-                      </small>
+                            <span
+                              style={{
+                                display:
+                                  "block",
+                                fontSize:
+                                  "12px",
+                                opacity:
+                                  0.62,
+                                lineHeight:
+                                  1.5,
+                              }}
+                            >
+                              Create one separate
+                              PDF for every page.
+                            </span>
+                          </button>
 
-                      <b>
-                        →
-                      </b>
-                    </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSplitMode(
+                                "ranges"
+                              )
+                            }
+                            style={{
+                              textAlign:
+                                "left",
+                              padding:
+                                "18px",
+                              borderRadius:
+                                "14px",
+                              border:
+                                splitMode ===
+                                "ranges"
+                                  ? "1px solid rgba(0,255,170,0.5)"
+                                  : "1px solid rgba(255,255,255,0.1)",
+                              background:
+                                splitMode ===
+                                "ranges"
+                                  ? "rgba(0,255,170,0.08)"
+                                  : "rgba(255,255,255,0.035)",
+                              color:
+                                "inherit",
+                              cursor:
+                                "pointer",
+                              font:
+                                "inherit",
+                            }}
+                          >
+                            <strong
+                              style={{
+                                display:
+                                  "block",
+                                marginBottom:
+                                  "6px",
+                              }}
+                            >
+                              Custom ranges
+                            </strong>
 
-                    <button
-                      type="button"
-                      className="freepdf-action-card"
-                      disabled
-                    >
-                      <span>
-                        Compress
-                      </span>
+                            <span
+                              style={{
+                                display:
+                                  "block",
+                                fontSize:
+                                  "12px",
+                                opacity:
+                                  0.62,
+                                lineHeight:
+                                  1.5,
+                              }}
+                            >
+                              Separate the PDF using
+                              page ranges.
+                            </span>
+                          </button>
+                        </div>
+                      </div>
 
-                      <small>
-                        Coming next
-                      </small>
+                      {splitMode ===
+                        "ranges" && (
+                        <div>
+                          <label
+                            htmlFor="freepdf-split-ranges"
+                            style={{
+                              display:
+                                "block",
+                              marginBottom:
+                                "8px",
+                              fontSize:
+                                "12px",
+                              fontWeight:
+                                700,
+                              letterSpacing:
+                                "0.12em",
+                              textTransform:
+                                "uppercase",
+                              opacity:
+                                0.65,
+                            }}
+                          >
+                            PAGE RANGES
+                          </label>
 
-                      <b>
-                        →
-                      </b>
-                    </button>
+                          <input
+                            id="freepdf-split-ranges"
+                            type="text"
+                            value={
+                              splitRanges
+                            }
+                            onChange={(
+                              event
+                            ) =>
+                              setSplitRanges(
+                                event
+                                  .target
+                                  .value
+                              )
+                            }
+                            placeholder="Example: 1-3, 4-7, 8-12"
+                            style={{
+                              width:
+                                "100%",
+                              minHeight:
+                                "48px",
+                              padding:
+                                "0 14px",
+                              borderRadius:
+                                "12px",
+                              border:
+                                "1px solid rgba(255,255,255,0.14)",
+                              background:
+                                "rgba(255,255,255,0.06)",
+                              color:
+                                "inherit",
+                              font:
+                                "inherit",
+                              outline:
+                                "none",
+                              boxSizing:
+                                "border-box",
+                            }}
+                          />
+
+                          <p
+                            style={{
+                              margin:
+                                "9px 0 0",
+                              fontSize:
+                                "12px",
+                              opacity:
+                                0.55,
+                              lineHeight:
+                                1.5,
+                            }}
+                          >
+                            Each comma-separated
+                            section becomes its own
+                            PDF. Example:
+                            <strong>
+                              {" "}
+                              1-3, 4-7, 8-12
+                            </strong>
+                            .
+                          </p>
+                        </div>
+                      )}
+
+                      {splitSource && (
+                        <div
+                          style={{
+                            padding:
+                              "14px 16px",
+                            borderRadius:
+                              "12px",
+                            background:
+                              "rgba(0,255,170,0.045)",
+                            border:
+                              "1px solid rgba(0,255,170,0.12)",
+                            fontSize:
+                              "13px",
+                            lineHeight:
+                              1.5,
+                          }}
+                        >
+                          <strong>
+                            {
+                              splitSource.name
+                            }
+                          </strong>
+
+                          <span
+                            style={{
+                              opacity:
+                                0.55,
+                              marginLeft:
+                                "8px",
+                            }}
+                          >
+                            {
+                              splitSource.pages
+                            }{" "}
+                            {splitSource.pages ===
+                            1
+                              ? "page"
+                              : "pages"}{" "}
+                            ·{" "}
+                            {formatBytes(
+                              splitSource.size
+                            )}
+                          </span>
+                        </div>
+                      )}
+
+                      <div
+                        style={{
+                          display:
+                            "flex",
+                          flexWrap:
+                            "wrap",
+                          gap:
+                            "10px",
+                          justifyContent:
+                            "flex-end",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          className="freepdf-action-card"
+                          onClick={
+                            closeSplit
+                          }
+                          disabled={
+                            processing
+                          }
+                          style={{
+                            minHeight:
+                              "58px",
+                          }}
+                        >
+                          <span>
+                            Cancel
+                          </span>
+
+                          <small>
+                            Back to actions
+                          </small>
+
+                          <b>
+                            ×
+                          </b>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="freepdf-action-card freepdf-action-primary"
+                          onClick={
+                            splitPDF
+                          }
+                          disabled={
+                            processing
+                          }
+                          style={{
+                            minHeight:
+                              "58px",
+                          }}
+                        >
+                          <span>
+                            Split PDF
+                          </span>
+
+                          <small>
+                            Process locally
+                          </small>
+
+                          <b>
+                            →
+                          </b>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {processing && (
                   <div className="freepdf-processing">
@@ -1031,7 +2189,9 @@ export default function PDFWorkspace() {
 
                     <div>
                       <strong>
-                        Merging your PDFs
+                        {splitOpen
+                          ? "Splitting your PDF"
+                          : "Merging your PDFs"}
                       </strong>
 
                       <p>
@@ -1045,6 +2205,221 @@ export default function PDFWorkspace() {
               </>
             )}
           </>
+        ) : success.operation ===
+          "split" ? (
+          <div className="freepdf-success">
+            <div className="freepdf-success-orbit">
+              <div className="freepdf-success-check">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m5 12 4 4L19 6" />
+                </svg>
+              </div>
+            </div>
+
+            <span className="freepdf-preview-label">
+              SPLIT COMPLETE
+            </span>
+
+            <h2>
+              Your PDF has been
+              <br />
+              <span>
+                split.
+              </span>
+            </h2>
+
+            <p>
+              {success.sourcePages} pages from{" "}
+              <strong>
+                {success.sourceName}
+              </strong>{" "}
+              were processed locally in your
+              browser.
+            </p>
+
+            <div
+              className="freepdf-result-card"
+              style={{
+                marginBottom:
+                  "18px",
+              }}
+            >
+              <div className="freepdf-result-icon">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <path d="M14 2v6h6" />
+                  <path d="M8 13h8" />
+                  <path d="M8 17h5" />
+                </svg>
+              </div>
+
+              <div className="freepdf-result-info">
+                <strong>
+                  {
+                    success.outputs.length
+                  }{" "}
+                  output{" "}
+                  {success.outputs.length ===
+                  1
+                    ? "PDF"
+                    : "PDFs"}
+                </strong>
+
+                <span>
+                  {
+                    success.totalOutputPages
+                  }{" "}
+                  output{" "}
+                  {
+                    success.totalOutputPages ===
+                    1
+                      ? "page"
+                      : "pages"
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display:
+                  "grid",
+                gap:
+                  "10px",
+                width:
+                  "100%",
+                maxWidth:
+                  "760px",
+                margin:
+                  "0 auto 24px",
+                textAlign:
+                  "left",
+              }}
+            >
+              {success.outputs.map(
+                (
+                  output,
+                  index
+                ) => (
+                  <div
+                    key={
+                      output.id
+                    }
+                    className="freepdf-result-card"
+                    style={{
+                      margin:
+                        0,
+                    }}
+                  >
+                    <div className="freepdf-result-icon">
+                      <span
+                        style={{
+                          fontSize:
+                            "11px",
+                          fontWeight:
+                            800,
+                          letterSpacing:
+                            "0.04em",
+                        }}
+                      >
+                        {String(
+                          index +
+                            1
+                        ).padStart(
+                          2,
+                          "0"
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="freepdf-result-info">
+                      <strong
+                        title={
+                          output.filename
+                        }
+                      >
+                        {
+                          output.filename
+                        }
+                      </strong>
+
+                      <span>
+                        {
+                          output.pages
+                        }{" "}
+                        {output.pages ===
+                        1
+                          ? "page"
+                          : "pages"}{" "}
+                        ·{" "}
+                        {formatBytes(
+                          output.size
+                        )}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="freepdf-download-button"
+                      onClick={() =>
+                        downloadSplitOutput(
+                          output
+                        )
+                      }
+                    >
+                      Download
+                      <span>
+                        ↓
+                      </span>
+                    </button>
+                  </div>
+                )
+              )}
+            </div>
+
+            <p
+              style={{
+                fontSize:
+                  "12px",
+                opacity:
+                  0.48,
+                maxWidth:
+                  "650px",
+                margin:
+                  "0 auto 20px",
+                lineHeight:
+                  1.6,
+              }}
+            >
+              Each output is available separately.
+              This keeps downloads reliable across
+              desktop browsers, iPhone and iPad.
+            </p>
+
+            <button
+              type="button"
+              className="freepdf-start-again"
+              onClick={
+                startAgain
+              }
+            >
+              ← Back to workspace
+            </button>
+          </div>
         ) : (
           <div className="freepdf-success">
             <div className="freepdf-success-orbit">
@@ -1145,3 +2520,4 @@ export default function PDFWorkspace() {
     </section>
   );
 }
+```
