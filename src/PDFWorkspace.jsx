@@ -540,6 +540,7 @@ export default function PDFWorkspace() {
   const fileInputRef = useRef(null);
   const dropZoneRef = useRef(null);
   const compressionResultRef = useRef(null);
+  const successRef = useRef(null);
 
   const [files, setFiles] = useState([]);
   const [dragActive, setDragActive] =
@@ -616,6 +617,21 @@ export default function PDFWorkspace() {
       ) || null,
     [files, splitSourceId]
   );
+
+  useEffect(() => {
+  if (!success) return;
+
+  const frame = requestAnimationFrame(() => {
+    setTimeout(() => {
+      successRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }, 50);
+  });
+
+  return () => cancelAnimationFrame(frame);
+}, [success]);
 
   /* ----------------------------------------------------------
      Success URL cleanup
@@ -1407,7 +1423,7 @@ export default function PDFWorkspace() {
     "split"
   ) {
     return (
-      <section className="freepdf-success">
+      <section  ref={successRef} className="freepdf-success">
         <div className="freepdf-success-orbit">
           <div className="freepdf-success-check">
             <CheckIcon />
@@ -1523,7 +1539,7 @@ export default function PDFWorkspace() {
     "merge"
   ) {
     return (
-      <section className="freepdf-success">
+      <section ref={successRef} className="freepdf-success">
         <div className="freepdf-success-orbit">
           <div className="freepdf-success-check">
             <CheckIcon />
