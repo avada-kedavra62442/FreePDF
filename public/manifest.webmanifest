@@ -1,17 +1,25 @@
 {
   "name": "FreePDF — Free PDF Tools",
   "short_name": "FreePDF",
-  "description": "Free, private PDF tools that run directly in your browser.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#030907",
   "theme_color": "#071c14",
-  "orientation": "portrait-primary",
+  "description": "Free, private PDF tools that run directly in your browser.",
+  "orientation": "any",
   "icons": [
     {
-      "src": "/favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
