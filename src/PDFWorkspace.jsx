@@ -1996,7 +1996,7 @@ export default function PDFWorkspace() {
 
                   <button
                     type="button"
-                    className="freepdf-action-card"
+                    className="freepdf-action-card freepdf-action-primary"
                     disabled
                   >
                     <span>
