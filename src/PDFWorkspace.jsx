@@ -12,7 +12,7 @@ import { mergePDF } from "./utils/mergePDF";
 import { splitPDF } from "./utils/splitPDF";
 
 /*
-  FreePDF Workspace
+  FreePDF Workspaced
 
   PDF processing architecture:
 
