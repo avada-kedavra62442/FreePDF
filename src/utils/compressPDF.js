@@ -1,43 +1,90 @@
-export function compressPDF(pdfBytes, preset = "balanced", onProgress) {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(
-      new URL("../workers/compress.worker.js", import.meta.url),
-      { type: "module" }
+import { load } from "@wasm-zoo/ghostscript";
+
+let gsInstance = null;
+
+async function getGhostscript() {
+  if (!gsInstance) {
+    gsInstance = await load();
+  }
+
+  return gsInstance;
+}
+
+export async function compressPDF(
+  pdfBytes,
+  preset = "balanced",
+  onProgress
+) {
+  if (!pdfBytes) {
+    throw new Error("No PDF data was provided.");
+  }
+
+  onProgress?.("Loading compression engine…");
+
+  const gs = await getGhostscript();
+
+  onProgress?.("Compressing PDF…");
+
+  const presets = {
+    balanced: [
+      "-dPDFSETTINGS=/ebook",
+      "-dCompatibilityLevel=1.4",
+    ],
+
+    strong: [
+      "-dPDFSETTINGS=/screen",
+      "-dCompatibilityLevel=1.4",
+    ],
+
+    maximum: [
+      "-dPDFSETTINGS=/screen",
+      "-dCompatibilityLevel=1.3",
+    ],
+  };
+
+  const selectedPreset =
+    presets[preset] || presets.balanced;
+
+  const inputBytes =
+    pdfBytes instanceof Uint8Array
+      ? pdfBytes
+      : new Uint8Array(pdfBytes);
+
+  const result = await gs.exec(
+    [
+      "-dSAFER",
+      "-dBATCH",
+      "-dNOPAUSE",
+      ...selectedPreset,
+      "-sDEVICE=pdfwrite",
+      "-sOutputFile=/output/compressed.pdf",
+      "/input/input.pdf",
+    ],
+    {
+      files: [
+        {
+          name: "/input/input.pdf",
+          data: inputBytes,
+        },
+      ],
+      dirs: ["/input", "/output"],
+      outputs: ["/output/compressed.pdf"],
+    }
+  );
+
+  const outputFile = result.files?.find(
+    (file) => file.name === "/output/compressed.pdf"
+  );
+
+  if (!outputFile?.data) {
+    throw new Error(
+      "Ghostscript did not produce a compressed PDF."
     );
+  }
 
-    worker.onmessage = (event) => {
-      const { type, message, bytes } = event.data;
+  onProgress?.("Compression complete.");
 
-      if (type === "progress") {
-        onProgress?.(message);
-        return;
-      }
-
-      if (type === "complete") {
-        worker.terminate();
-        resolve(bytes);
-        return;
-      }
-
-      if (type === "error") {
-        worker.terminate();
-        reject(new Error(message));
-      }
-    };
-
-    worker.onerror = (error) => {
-      worker.terminate();
-      reject(
-        new Error(
-          error?.message ||
-            "The PDF compression worker failed to start."
-        )
-      );
-    };
-
-    worker.postMessage({
-      pdfBytes,
-      preset,
-    });
-  });
+  return outputFile.data instanceof Uint8Array
+    ? outputFile.data
+    : new Uint8Array(outputFile.data);
 }
