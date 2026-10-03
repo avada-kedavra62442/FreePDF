@@ -518,95 +518,128 @@ function App() {
         </section>
       </main>
 
-      {/* FOOTER */}
-      <footer className="site-footer">
-        <div className="footer-main">
-          <div className="footer-brand">
-            <div className="footer-brand-row">
-              <span className="brand-mark footer-mark">
-                <span className="brand-mark-inner">F</span>
-              </span>
+{/* FOOTER */}
+<footer className="site-footer">
+  <div className="footer-main">
+    <div className="footer-brand">
+      <div className="footer-brand-row">
+        <span className="brand-mark footer-mark">
+          <span className="brand-mark-inner">F</span>
+        </span>
 
-              <span className="footer-brand-name">
-                Free<span>Toolz</span>
-              </span>
-            </div>
+        <span className="footer-brand-name">
+          Free<span>Toolz</span>
+        </span>
+      </div>
 
-            <p>
-              Useful software.
-              <br />
-              Without the nonsense.
-            </p>
+      <p>
+        Useful software.
+        <br />
+        Without the nonsense.
+      </p>
 
-            <div className="footer-status">
-              <span className="status-dot" />
-              Building useful things
-            </div>
-          </div>
+      <div className="footer-status">
+        <span className="status-dot" />
+        Building useful things
+      </div>
 
-          <div className="footer-column">
-            <span className="footer-heading">PRODUCTS</span>
+      <div className="footer-socials">
+        <a
+          href="https://github.com/avada-kedavra62442/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-social-link"
+          aria-label="GitHub"
+          title="GitHub"
+        >
+          <Github size={18} strokeWidth={1.8} />
+        </a>
 
-            <button onClick={() => scrollTo("workspace")}>
-              FreePDF
-            </button>
+        <a
+          href="mailto:aarav.krish62442@gmail.com"
+          className="footer-social-link"
+          aria-label="Email"
+          title="Email"
+        >
+          <Mail size={18} strokeWidth={1.8} />
+        </a>
 
-            <button>FreeImage</button>
-            <button>FreeVideo</button>
-            <button>FreeConvert</button>
-          </div>
+        <a
+          href="https://www.linkedin.com/in/aarav-krish-665702440/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-social-link"
+          aria-label="LinkedIn"
+          title="LinkedIn"
+        >
+          <Linkedin size={18} strokeWidth={1.8} />
+        </a>
+      </div>
+    </div>
 
-          <div className="footer-column">
-            <span className="footer-heading">TOOLS</span>
+    <div className="footer-column">
+      <span className="footer-heading">PRODUCTS</span>
 
-            <button onClick={() => scrollTo("workspace")}>
-              Merge PDF
-            </button>
+      <button onClick={() => scrollTo("workspace")}>
+        FreePDF
+      </button>
 
-            <button onClick={() => scrollTo("workspace")}>
-              Compress PDF
-            </button>
+      <button>FreeImage</button>
+      <button>FreeVideo</button>
+      <button>FreeConvert</button>
+    </div>
 
-            <button onClick={() => scrollTo("workspace")}>
-              Split PDF
-            </button>
+    <div className="footer-column">
+      <span className="footer-heading">TOOLS</span>
 
-            <button>View all tools</button>
-          </div>
+      <button onClick={() => scrollTo("workspace")}>
+        Merge PDF
+      </button>
 
-          <div className="footer-column">
-            <span className="footer-heading">INFORMATION</span>
+      <button onClick={() => scrollTo("workspace")}>
+        Compress PDF
+      </button>
 
-            <button onClick={() => scrollTo("how")}>
-              How it works
-            </button>
+      <button onClick={() => scrollTo("workspace")}>
+        Split PDF
+      </button>
 
-            <button onClick={() => scrollTo("privacy")}>
-              Privacy Policy
-            </button>
+      <button>View all tools</button>
+    </div>
 
-            <button onClick={() => scrollTo("faq")}>
-              FAQ
-            </button>
+    <div className="footer-column">
+      <span className="footer-heading">INFORMATION</span>
 
-            <a href="mailto:YOUR_EMAIL_HERE">
-              Contact Developer
-            </a>
+      <button onClick={() => scrollTo("how")}>
+        How it works
+      </button>
 
-            <a href="mailto:YOUR_EMAIL_HERE?subject=FreeToolz%20Feedback">
-              Send Feedback
-            </a>
-          </div>
-        </div>
+      <button onClick={() => scrollTo("privacy")}>
+        Privacy Policy
+      </button>
 
-        <div className="footer-bottom">
-          <span>© 2026 FreeToolz. All rights reserved.</span>
+      <button onClick={() => scrollTo("faq")}>
+        FAQ
+      </button>
 
-          <span className="footer-line" />
+      <a href="mailto:aarav.krish62442@gmail.com">
+        Contact Developer
+      </a>
 
-          <span>BUILT FOR THE WEB · BUILT TO BE USEFUL</span>
-        </div>
-      </footer>
+      <a href="mailto:aarav.krish62442@gmail.com?subject=FreeToolz%20Feedback">
+        Send Feedback
+      </a>
+    </div>
+  </div>
+
+  <div className="footer-bottom">
+    <span>© 2026 FreeToolz. All rights reserved.</span>
+
+    <span className="footer-line" />
+
+    <span>BUILT FOR THE WEB · BUILT TO BE USEFUL</span>
+  </div>
+</footer>
     </div>
   );
 }
