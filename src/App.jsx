@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import {FaGithub, Mail, FaLinkedin} from "lucide-react";
+import { FaGithub, FaEnvelope, FaLinkedin } from "react-icons/fa";
 import "./styles.css";
 import PDFWorkspace from "./PDFWorkspace";
 
@@ -562,7 +562,7 @@ function App() {
           aria-label="Email"
           title="Email"
         >
-          <Mail size={18} strokeWidth={1.8} />
+          <FaEnvelope size={18} strokeWidth={1.8} />
         </a>
 
         <a
