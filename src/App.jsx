@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import {FaGithub, Mail, FaLinkedin} from "lucide-react";
 import "./styles.css";
 import PDFWorkspace from "./PDFWorkspace";
 
@@ -552,7 +553,7 @@ function App() {
           aria-label="GitHub"
           title="GitHub"
         >
-          <Github size={18} strokeWidth={1.8} />
+          <FaGithub size={18} strokeWidth={1.8} />
         </a>
 
         <a
@@ -572,7 +573,7 @@ function App() {
           aria-label="LinkedIn"
           title="LinkedIn"
         >
-          <Linkedin size={18} strokeWidth={1.8} />
+          <FaLinkedin size={18} strokeWidth={1.8} />
         </a>
       </div>
     </div>
