@@ -21,15 +21,8 @@ import { splitPDF } from "./utils/splitPDF";
     compress
     pdf-to-image
     image-to-pdf
-    rearrange
     delete-pages
-    extract-pages
-    rotate
-    page-numbers
-    watermark
-    remove-watermark
     sign
-    fill-forms
     password-protect
     metadata
 
@@ -504,72 +497,35 @@ const TOOL_INFO = {
     description:
       "Convert PDF pages into clean JPG or PNG images directly in your browser.",
   },
+
   "image-to-pdf": {
     eyebrow: "IMAGE → PDF",
     title: "Turn images into a PDF.",
     description:
       "Combine JPG and PNG images into a clean PDF document.",
   },
-  rearrange: {
-    eyebrow: "REARRANGE PAGES",
-    title: "Put your pages in the right order.",
-    description:
-      "Reorder PDF pages exactly how you want them.",
-  },
+
   "delete-pages": {
     eyebrow: "DELETE PAGES",
     title: "Remove pages you don't need.",
     description:
       "Delete selected pages from an existing PDF.",
   },
-  extract: {
-    eyebrow: "EXTRACT PAGES",
-    title: "Pull pages into a new PDF.",
-    description:
-      "Extract selected pages or ranges into a separate document.",
-  },
-  rotate: {
-    eyebrow: "ROTATE PAGES",
-    title: "Rotate PDF pages.",
-    description:
-      "Correct page orientation before downloading your PDF.",
-  },
-  "page-numbers": {
-    eyebrow: "PAGE NUMBERS",
-    title: "Add page numbers.",
-    description:
-      "Add clean page numbering to your PDF.",
-  },
-  watermark: {
-    eyebrow: "ADD WATERMARK",
-    title: "Watermark your PDF.",
-    description:
-      "Add your own text watermark to PDF pages.",
-  },
-  "remove-watermark": {
-    eyebrow: "REMOVE YOUR WATERMARK",
-    title: "Remove a watermark you own.",
-    description:
-      "A dedicated tool for removing your own previously added watermark.",
-  },
+
   sign: {
     eyebrow: "SIGN PDF",
     title: "Sign your PDF.",
     description:
       "Add your signature to a PDF document.",
   },
-  "fill-forms": {
-    eyebrow: "FILL FORMS",
-    title: "Fill PDF forms.",
-    description:
-      "Enter information into fillable PDF form fields.",
-  },
+
   "password-protect": {
     eyebrow: "PASSWORD PROTECT",
     title: "Protect your PDF.",
     description:
       "Add password protection to your PDF document.",
   },
+
   metadata: {
     eyebrow: "PDF METADATA",
     title: "Edit PDF metadata.",
@@ -1306,13 +1262,47 @@ export default function PDFWorkspace({ mode = "workspace" }) {
     !isSplit &&
     !isCompress
   ) {
-    const info =
-      TOOL_INFO[mode] || {
-        eyebrow: "FREEPDF TOOL",
-        title: "A useful PDF tool is on the way.",
-        description:
-          "This dedicated FreePDF tool page is being built next.",
-      };
+    const info = TOOL_INFO[mode];
+
+    /*
+      Future tool pages intentionally use ONE heading block.
+      Do not repeat the title/description elsewhere on this page.
+      This prevents the "Delete Pages / Metadata / ..." text
+      from appearing twice.
+    */
+
+    if (!info) {
+      return (
+        <section className="freepdf-success">
+          <div className="freepdf-success-orbit">
+            <div className="freepdf-success-check">
+              <FileIcon />
+            </div>
+          </div>
+
+          <span className="freepdf-eyebrow">
+            FREEPDF TOOL
+          </span>
+
+          <h2>
+            <span>This FreePDF tool is coming next.</span>
+          </h2>
+
+          <p>
+            This dedicated FreePDF tool page is being
+            built next.
+          </p>
+
+          <button
+            type="button"
+            className="freepdf-start-again"
+            onClick={() => navigate("/workspace")}
+          >
+            View all tools
+          </button>
+        </section>
+      );
+    }
 
     return (
       <section className="freepdf-success">
@@ -1353,6 +1343,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
 
           <div className="freepdf-result-info">
             <strong>Coming next</strong>
+
             <span>
               The page is reserved for this tool.
             </span>
@@ -1468,6 +1459,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
           {(processing || compressionBusy) && (
             <div className="freepdf-loading">
               <span className="freepdf-spinner" />
+
               <span>
                 {compressionProgress ||
                   processingOperation ||
@@ -1533,6 +1525,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
             <div className="freepdf-stats">
               <div className="freepdf-stat">
                 <span>PDFs</span>
+
                 <strong>
                   {formatNumber(files.length)}
                 </strong>
@@ -1542,6 +1535,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
 
               <div className="freepdf-stat">
                 <span>Pages</span>
+
                 <strong>
                   {formatNumber(totalPages)}
                 </strong>
@@ -1551,6 +1545,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
 
               <div className="freepdf-stat">
                 <span>Total size</span>
+
                 <strong>
                   {formatBytes(totalSize)}
                 </strong>
@@ -1664,10 +1659,12 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     }
                   >
                     <span>Merge</span>
+
                     <small>
                       Combine multiple PDFs
                       into one
                     </small>
+
                     <b>
                       <ChevronIcon />
                     </b>
@@ -1681,10 +1678,12 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     }
                   >
                     <span>Split</span>
+
                     <small>
                       Divide a PDF into
                       separate parts
                     </small>
+
                     <b>
                       <ChevronIcon />
                     </b>
@@ -1698,41 +1697,11 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     }
                   >
                     <span>Compress</span>
+
                     <small>
                       Reduce PDF file size
                     </small>
-                    <b>
-                      <ChevronIcon />
-                    </b>
-                  </button>
 
-                  <button
-                    type="button"
-                    className="freepdf-action-card"
-                    onClick={() =>
-                      navigate("/extract")
-                    }
-                  >
-                    <span>Extract</span>
-                    <small>
-                      Extract selected pages
-                    </small>
-                    <b>
-                      <ChevronIcon />
-                    </b>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="freepdf-action-card"
-                    onClick={() =>
-                      navigate("/rearrange")
-                    }
-                  >
-                    <span>Rearrange</span>
-                    <small>
-                      Change page order
-                    </small>
                     <b>
                       <ChevronIcon />
                     </b>
@@ -1746,13 +1715,16 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     }
                   >
                     <span>Delete pages</span>
+
                     <small>
                       Remove unwanted pages
                     </small>
+
                     <b>
                       <ChevronIcon />
                     </b>
                   </button>
+
                 </div>
               </div>
             )}
@@ -1820,6 +1792,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     {processing
                       ? "Merging..."
                       : "Merge PDFs"}
+
                     {!processing && (
                       <ChevronIcon />
                     )}
@@ -1909,6 +1882,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                         : <ChevronIcon />}
                     </b>
                   </button>
+
                 </div>
 
                 <div
@@ -2101,6 +2075,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                     {processing
                       ? "Splitting..."
                       : "Split PDF"}
+
                     {!processing && (
                       <ChevronIcon />
                     )}
@@ -2191,6 +2166,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                       </button>
                     )
                   )}
+
                 </div>
 
                 <div
@@ -2299,6 +2275,7 @@ export default function PDFWorkspace({ mode = "workspace" }) {
                       }
                     >
                       <DownloadIcon />
+
                       <span>
                         Download
                       </span>
