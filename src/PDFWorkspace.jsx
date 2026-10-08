@@ -914,6 +914,102 @@ export default function PDFWorkspace({
       setCompressionResult(null);
       setMetadataResult(null);
 
+      /*
+        METADATA FAST PATH
+
+        This MUST happen before readPDF().
+
+        The old flow first:
+          1. loaded the PDF with pdf-lib,
+          2. loaded PDF.js,
+          3. created a complete PDF.js preview,
+          4. rendered/parsed the document,
+          5. then loaded the same PDF AGAIN
+             to inspect metadata.
+
+        That made the Metadata Editor feel ridiculously slow,
+        especially for large PDFs.
+
+        Metadata mode now performs exactly one PDF load and
+        deliberately skips PDF.js and page previews.
+      */
+      if (mode === "metadata") {
+        const file = pdfFiles[0];
+
+        setProcessing(true);
+        setProcessingOperation(
+          "Reading PDF Metadata"
+        );
+
+        try {
+          const buffer =
+            new Uint8Array(
+              await file.arrayBuffer()
+            );
+
+          const inspected =
+            await inspectPDFMetadata(
+              buffer
+            );
+
+          const metadataItem = {
+            id: makeId(),
+            file,
+            buffer,
+            name: file.name,
+            size: file.size,
+            pages:
+              inspected.pageCount ||
+              0,
+            pdf: null,
+            previewAvailable: false,
+          };
+
+          setFiles([
+            metadataItem,
+          ]);
+
+          setMetadata(
+            inspected
+          );
+
+          setMetadataDirty(
+            false
+          );
+
+          setMetadataResult(
+            null
+          );
+
+          setSplitSourceId(
+            metadataItem.id
+          );
+        } catch (
+          metadataError
+        ) {
+          console.error(
+            "[FreePDF] Fast metadata inspection failed:",
+            metadataError
+          );
+
+          setFiles([]);
+
+          setMetadata(null);
+          setMetadataDirty(false);
+          setMetadataResult(null);
+
+          setError(
+            metadataError?.message ||
+              "FreePDF couldn't read this PDF's metadata. The file may be damaged, encrypted, or unsupported."
+          );
+        } finally {
+          setProcessing(false);
+          setProcessingOperation("");
+        }
+
+        return;
+      }
+
       setProcessing(true);
       setProcessingOperation(
         "Reading your PDFs"
@@ -941,55 +1037,12 @@ export default function PDFWorkspace({
         }
 
         if (loaded.length) {
-          if (mode === "metadata") {
-            const firstPDF =
-              loaded[0];
-
-            try {
-              setProcessingOperation(
-                "Reading embedded PDF metadata"
-              );
-
-              const inspected =
-                await inspectPDFMetadata(
-                  firstPDF.buffer
-                );
-
-              setMetadata(
-                inspected
-              );
-
-              setMetadataDirty(
-                false
-              );
-
-              setMetadataResult(
-                null
-              );
-            } catch (
-              metadataError
-            ) {
-              console.error(
-                "[FreePDF] Metadata inspection failed:",
-                metadataError
-              );
-
-              setError(
-                "FreePDF could read the PDF, but couldn't inspect its metadata."
-              );
-            }
-          }
-
-          if (mode === "metadata") {
-            setFiles([loaded[0]]);
-          } else {
-            setFiles(
-              (current) => [
-                ...current,
-                ...loaded,
-              ]
-            );
-          }
+          setFiles(
+            (current) => [
+              ...current,
+              ...loaded,
+            ]
+          );
 
           if (!splitSourceId) {
             setSplitSourceId(
