@@ -2487,6 +2487,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
                   </label>
@@ -2695,6 +2697,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
 
@@ -2738,6 +2742,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
                   </div>
@@ -2834,6 +2840,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
 
@@ -2877,6 +2885,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
                   </div>
@@ -3041,6 +3051,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
 
@@ -3084,6 +3096,8 @@ export default function PDFWorkspace({
                           "none",
                         font:
                           "inherit",
+                        colorScheme:
+                          "dark",
                       }}
                     />
 
