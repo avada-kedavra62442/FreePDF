@@ -814,7 +814,7 @@ function GlassDatePicker({
             border:
               "1px solid rgba(167, 221, 199, 0.22)",
             background:
-              "linear-gradient(145deg, rgba(25, 43, 37, 0.97), rgba(10, 20, 17, 0.985))",
+              "linear-gradient(145deg, #182b25 0%, #0d1a16 100%)",
             boxShadow:
               "0 24px 55px rgba(0,0,0,0.48), 0 0 34px rgba(38, 209, 126, 0.10), inset 0 1px 0 rgba(255,255,255,0.08)",
             backdropFilter: "blur(24px) saturate(145%)",
