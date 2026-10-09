@@ -767,21 +767,18 @@ function InstallFreePDF() {
     setHelpOpen(true);
   };
 
+  if (installed) return null;
+
   return (
     <>
       <button
         type="button"
         className="secondary-button"
         onClick={install}
-        disabled={installed}
-        title={installed ? "FreePDF is already installed" : "Install FreePDF as an app"}
-        style={{
-          opacity: installed ? 0.7 : 1,
-          cursor: installed ? "default" : "pointer",
-        }}
+        title="Install FreePDF as an app"
       >
-        <span>{installed ? "FreePDF installed" : "Install FreePDF"}</span>
-        <span>{installed ? "✓" : "＋"}</span>
+        <span>Install FreePDF</span>
+        <span>＋</span>
       </button>
 
       {helpOpen && (
