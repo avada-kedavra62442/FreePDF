@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://free-pdf-delta.vercel.app/sitemap.xml
