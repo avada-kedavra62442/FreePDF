@@ -430,14 +430,15 @@ function Footer() {
       <div className="footer-main">
         <div className="footer-brand">
           <div className="footer-brand-row">
-            <span className="brand-mark footer-mark">
-              <span className="brand-mark-inner">
-                F
-              </span>
-            </span>
+            <img
+              className="footer-favicon"
+              src="/favicon.svg"
+              alt=""
+              aria-hidden="true"
+            />
 
             <span className="footer-brand-name">
-              Free<span>Toolz</span>
+              Free<span>PDF</span>
             </span>
           </div>
 
@@ -573,7 +574,7 @@ function Footer() {
 
       <div className="footer-bottom">
         <span>
-          © 2026 FreeToolz. All rights reserved.
+          © 2026 FreePDF. All rights reserved.
         </span>
 
         <span className="footer-line" />
