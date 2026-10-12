@@ -4564,3 +4564,26 @@ a {
     line-height: 1.8;
   }
 }
+
+/* Footer brand: match the FreePDF navbar identity */
+.footer-favicon {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  object-fit: contain;
+  border-radius: 9px;
+  filter: drop-shadow(0 0 12px rgba(22, 199, 132, 0.18));
+}
+
+.footer-brand-row {
+  gap: 11px;
+}
+
+@media (max-width: 760px) {
+  .footer-favicon {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+}
