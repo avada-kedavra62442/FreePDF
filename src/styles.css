@@ -198,6 +198,16 @@ a {
   z-index: 2;
 }
 
+.brand-favicon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 0 10px rgba(22, 199, 132, 0.16));
+}
+
 .brand-mark {
   width: 39px;
   height: 39px;
@@ -1833,15 +1843,6 @@ a {
     height: 36px;
   }
 
-  .brand-favicon {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 28px;
-  display: block;
-  object-fit: contain;
-  border-radius: 10px;
-  filter: drop-shadow(0 0 10px rgba(22, 199, 132, 0.16));
-}
 
 .brand-name {
     font-size: 15px;
