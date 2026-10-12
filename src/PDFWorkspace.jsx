@@ -12,6 +12,7 @@ import { compressPDF } from "./utils/compressPDF";
 import { mergePDF } from "./utils/mergePDF";
 import { splitPDF } from "./utils/splitPDF";
 import PasswordProtectTool from "./PasswordProtectTool";
+import SignPdfTool from "./SignPdfTool";
 import ImageToPdfTool from "./ImageToPdfTool";
 import PdfToImageTool from "./PdfToImageTool";
 
@@ -3857,6 +3858,10 @@ export default function PDFWorkspace({
 
   if (mode === "pdf-to-image") {
     return <PdfToImageTool />;
+  }
+
+  if (mode === "sign") {
+    return <SignPdfTool />;
   }
 
   if (mode === "password-protect") {
