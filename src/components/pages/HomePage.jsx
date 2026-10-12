@@ -352,7 +352,7 @@ export default function HomePage() {
                 onClick={() =>
                   navigate(tool.path)
                 }
-                className="step-card"
+                className="step-card homepage-tool-card"
                 style={{
                   textAlign: "left",
                   cursor: "pointer",

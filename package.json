@@ -20,7 +20,8 @@
     "pdf-lib": "latest",
     "pdfstudio": "^0.4.0",
     "@wasm-zoo/ghostscript": "latest",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "@vercel/speed-insights": "latest"
   },
   "devDependencies": {}
 }

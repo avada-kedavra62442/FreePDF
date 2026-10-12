@@ -451,3 +451,93 @@
   .install-app-button { min-height: 38px; padding: 0 11px; }
   .install-help { padding: 25px 22px; }
 }
+
+
+/* ============================================================
+   FREEPDF SIGNATURE LIQUID-GLASS METALLIC SHEEN — HOMEPAGE TOOL CARDS
+   ============================================================ */
+.homepage-tool-card{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  border:1px solid rgba(204,224,215,.32)!important;
+  border-radius:22px!important;
+  background:
+    radial-gradient(ellipse at 12% 0%,rgba(229,242,235,.14),transparent 42%),
+    linear-gradient(135deg,rgba(255,255,255,.095) 0%,rgba(255,255,255,.025) 26%,rgba(45,211,139,.07) 62%,rgba(10,20,15,.34) 100%),
+    rgba(15,25,20,.72)!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.27),
+    inset 1px 0 0 rgba(255,255,255,.075),
+    inset 0 -1px 0 rgba(201,224,212,.11),
+    0 18px 45px rgba(0,0,0,.24),
+    0 0 0 1px rgba(0,0,0,.15)!important;
+  backdrop-filter:blur(24px) saturate(165%)!important;
+  -webkit-backdrop-filter:blur(24px) saturate(165%)!important;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .3s ease,background .3s ease!important;
+}
+.homepage-tool-card:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:linear-gradient(118deg,rgba(255,255,255,.17),transparent 20%,transparent 58%,rgba(197,218,207,.055) 78%,rgba(43,221,139,.08))!important;
+  opacity:1!important;
+}
+.homepage-tool-card:after{
+  content:""!important;
+  position:absolute!important;
+  z-index:0!important;
+  top:-75%!important;
+  left:-110%!important;
+  width:64%!important;
+  height:250%!important;
+  pointer-events:none!important;
+  transform:rotate(24deg)!important;
+  background:linear-gradient(90deg,transparent,rgba(226,239,232,.025) 20%,rgba(238,248,243,.22) 49%,rgba(255,255,255,.045) 70%,transparent)!important;
+  transition:left .85s cubic-bezier(.2,.7,.2,1)!important;
+}
+.homepage-tool-card>*{position:relative;z-index:1}
+.homepage-tool-card .step-top>span:first-child{
+  color:#e7f5ed!important;
+  text-shadow:0 0 18px rgba(115,239,174,.18);
+}
+.homepage-tool-card .step-top>span:last-child{
+  color:#b9d9c8!important;
+}
+.homepage-tool-card h3{
+  color:#f0f6f2!important;
+  text-shadow:0 1px 18px rgba(229,242,235,.045);
+}
+.homepage-tool-card p{color:rgba(207,222,214,.82)!important}
+.homepage-tool-card>span:last-child{
+  color:#a8efc5!important;
+  transition:color .25s ease,text-shadow .25s ease,transform .25s ease;
+}
+.homepage-tool-card:hover{
+  transform:translateY(-6px)!important;
+  border-color:rgba(211,237,222,.62)!important;
+  background:
+    radial-gradient(ellipse at 12% 0%,rgba(239,249,243,.19),transparent 42%),
+    linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.035) 26%,rgba(45,225,143,.12) 62%,rgba(10,20,15,.30))!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.4),
+    inset 0 0 30px rgba(226,241,233,.035),
+    0 25px 60px rgba(0,0,0,.34),
+    0 0 34px rgba(47,221,139,.095)!important;
+}
+.homepage-tool-card:hover:after{left:150%!important}
+.homepage-tool-card:hover>span:last-child{
+  color:#f0fff6!important;
+  text-shadow:0 0 18px rgba(126,241,174,.24);
+  transform:translateX(3px);
+}
+.homepage-tool-card:focus-visible{
+  outline:2px solid rgba(139,244,184,.85)!important;
+  outline-offset:4px!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .homepage-tool-card,.homepage-tool-card:after{transition:none!important}
+}
