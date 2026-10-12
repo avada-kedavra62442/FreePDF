@@ -37,22 +37,22 @@ export default function ImageToPdfTool() {
       setError("Please choose JPG, JPEG or PNG images.");
       return;
     }
-    setImages((current) => {
-      const combined = [...current, ...valid].slice(0, 100);
-      return combined.map((file, index) => ({
-        file,
-        id: `${file.name}-${file.size}-${file.lastModified}-${index}-${Math.random().toString(36).slice(2, 7)}`,
-        preview: URL.createObjectURL(file),
-      }));
-    });
+    const availableSlots = Math.max(0, 100 - images.length);
+    if (valid.length > availableSlots) {
+      setError("FreePDF supports up to 100 images per PDF. The extra files were not added.");
+    }
+    const additions = valid.slice(0, availableSlots).map((file) => ({
+      file,
+      id: `${file.name}-${file.size}-${file.lastModified}-${Math.random().toString(36).slice(2, 10)}`,
+      preview: URL.createObjectURL(file),
+    }));
+    setImages((current) => [...current, ...additions].slice(0, 100));
   };
 
   const removeImage = (id) => {
-    setImages((current) => {
-      const target = current.find((item) => item.id === id);
-      if (target) URL.revokeObjectURL(target.preview);
-      return current.filter((item) => item.id !== id);
-    });
+    const target = images.find((item) => item.id === id);
+    if (target) URL.revokeObjectURL(target.preview);
+    setImages((current) => current.filter((item) => item.id !== id));
     releaseResult();
   };
 
