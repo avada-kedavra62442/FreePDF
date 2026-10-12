@@ -805,18 +805,20 @@ function GlassDatePicker({
           aria-label={`${ariaLabel} calendar`}
           style={{
             position: "absolute",
-            zIndex: 100,
+            zIndex: 9999,
             top: "calc(100% + 9px)",
             left: 0,
             width: "min(318px, calc(100vw - 40px))",
             padding: 14,
             borderRadius: 17,
             border:
-              "1px solid rgba(167, 221, 199, 0.22)",
+              "1px solid rgba(198, 220, 211, 0.34)",
             background:
-              "linear-gradient(145deg, #182b25 0%, #0d1a16 100%)",
+              "linear-gradient(145deg, rgba(21, 45, 36, 0.99) 0%, rgba(10, 24, 19, 0.985) 100%)",
+            backdropFilter: "blur(22px)",
+            WebkitBackdropFilter: "blur(22px)",
             boxShadow:
-              "0 24px 55px rgba(0,0,0,0.48), 0 0 34px rgba(38, 209, 126, 0.10), inset 0 1px 0 rgba(255,255,255,0.08)",
+              "0 28px 65px rgba(0,0,0,0.62), 0 0 38px rgba(38,209,126,0.16), inset 0 1px 0 rgba(225,245,236,0.12)",
           }}
         >
           <div
