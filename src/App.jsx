@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   FaGithub,
   FaEnvelope,
@@ -781,7 +782,7 @@ function InstallFreePDF() {
         <span>＋</span>
       </button>
 
-      {helpOpen && (
+      {helpOpen && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -855,7 +856,8 @@ function InstallFreePDF() {
               <span>✓</span>
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
