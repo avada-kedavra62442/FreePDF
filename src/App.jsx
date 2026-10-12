@@ -19,9 +19,7 @@ const TOOL_ROUTES = {
   split: "/split",
   compress: "/compress",
   "pdf-to-image": "/pdf-to-image",
-  "image-to-pdf": "/image-to-pdf",
-  "delete-pages": "/delete-pages",
-  sign: "/sign",
+  "image-to-pdf": "/image-to-pdf",  sign: "/sign",
   "password-protect": "/password-protect",
   metadata: "/metadata",
 };
@@ -96,12 +94,6 @@ const TOOLS = [
     path: "/image-to-pdf",
   },
   {
-    name: "Delete Pages",
-    description: "Remove pages you no longer need.",
-    icon: "−",
-    path: "/delete-pages",
-  },
-  {
     name: "Sign PDF",
     description: "Add your signature to a PDF.",
     icon: "✎",
@@ -135,7 +127,7 @@ const FAQS = [
   {
     question: "What can I do with FreePDF?",
     answer:
-      "FreePDF is being built as a focused collection of tools for merging, splitting, compressing, converting, deleting pages, signing, protecting and managing PDFs.",
+      "FreePDF is being built as a focused collection of tools for merging, splitting, compressing, converting, signing, protecting and managing PDFs.",
   },
   {
     question: "Are my files uploaded somewhere?",
@@ -544,12 +536,6 @@ function Footer() {
           >
             Image → PDF
           </button>
-
-          <button
-            onClick={() => go("/delete-pages")}
-          >
-            Delete pages
-          </button>
         </div>
 
         <div className="footer-column">
@@ -625,8 +611,6 @@ function ToolPage({
       "Turn PDF pages into images.",
     "image-to-pdf":
       "Turn images into a PDF.",
-    "delete-pages":
-      "Remove pages you don't need.",
     sign:
       "Sign your PDF.",
     "password-protect":
@@ -1491,10 +1475,6 @@ export default function App() {
       "/image-to-pdf": {
         title: "Convert JPG or PNG to PDF Free — FreePDF",
         description: "Combine JPG or PNG images into a PDF document with FreePDF's free image-to-PDF converter.",
-      },
-      "/delete-pages": {
-        title: "Delete PDF Pages Online Free — FreePDF",
-        description: "Remove unwanted pages from a PDF with FreePDF's free online PDF page deletion tool.",
       },
       "/sign": {
         title: "Sign PDF Online Free — FreePDF",
