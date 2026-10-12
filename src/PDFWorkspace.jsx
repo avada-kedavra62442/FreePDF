@@ -12,6 +12,8 @@ import { compressPDF } from "./utils/compressPDF";
 import { mergePDF } from "./utils/mergePDF";
 import { splitPDF } from "./utils/splitPDF";
 import PasswordProtectTool from "./PasswordProtectTool";
+import ImageToPdfTool from "./ImageToPdfTool";
+import PdfToImageTool from "./PdfToImageTool";
 
 import {
   inspectPDFMetadata,
@@ -30,7 +32,6 @@ import {
     compress
     pdf-to-image
     image-to-pdf
-    delete-pages
     sign
     password-protect
     metadata
@@ -678,13 +679,6 @@ const TOOL_INFO = {
     title: "Turn images into a PDF.",
     description:
       "Combine JPG and PNG images into a clean PDF document.",
-  },
-
-  "delete-pages": {
-    eyebrow: "DELETE PAGES",
-    title: "Remove pages you don't need.",
-    description:
-      "Delete selected pages from an existing PDF.",
   },
 
   sign: {
@@ -3857,6 +3851,14 @@ export default function PDFWorkspace({
     );
   }
 
+  if (mode === "image-to-pdf") {
+    return <ImageToPdfTool />;
+  }
+
+  if (mode === "pdf-to-image") {
+    return <PdfToImageTool />;
+  }
+
   if (mode === "password-protect") {
     return <PasswordProtectTool />;
   }
@@ -4404,27 +4406,25 @@ export default function PDFWorkspace({
                     </b>
                   </button>
 
+
                   <button
                     type="button"
                     className="freepdf-action-card"
-                    onClick={() =>
-                      navigate(
-                        "/delete-pages"
-                      )
-                    }
+                    onClick={() => navigate("/pdf-to-image")}
                   >
-                    <span>
-                      Delete pages
-                    </span>
+                    <span>PDF → Image</span>
+                    <small>Export pages as JPG or PNG</small>
+                    <b><ChevronIcon /></b>
+                  </button>
 
-                    <small>
-                      Remove unwanted
-                      pages
-                    </small>
-
-                    <b>
-                      <ChevronIcon />
-                    </b>
+                  <button
+                    type="button"
+                    className="freepdf-action-card"
+                    onClick={() => navigate("/image-to-pdf")}
+                  >
+                    <span>Image → PDF</span>
+                    <small>Combine images into one PDF</small>
+                    <b><ChevronIcon /></b>
                   </button>
                 </div>
               </div>
