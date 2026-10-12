@@ -36,9 +36,9 @@ import {
     password-protect
     metadata
 
-  Merge / Split / Compress / Metadata are currently functional.
-  Other routes intentionally show a "coming next" state
-  until their actual PDF engine is implemented.
+  Merge / Split / Compress / Metadata / Image-to-PDF /
+  PDF-to-Image / Password Protection are implemented.
+  Remaining unfinished tools show a "coming next" state.
 */
 
 let pdfjsPromise = null;
