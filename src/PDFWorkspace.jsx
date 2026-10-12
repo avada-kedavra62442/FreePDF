@@ -730,6 +730,7 @@ function GlassDatePicker({
       ref={pickerRef}
       style={{
         position: "relative",
+        zIndex: open ? 2147483000 : 1,
         width: "100%",
       }}
     >
@@ -805,7 +806,7 @@ function GlassDatePicker({
           aria-label={`${ariaLabel} calendar`}
           style={{
             position: "absolute",
-            zIndex: 9999,
+            zIndex: 2147483000,
             top: "calc(100% + 9px)",
             left: 0,
             width: "min(318px, calc(100vw - 40px))",
