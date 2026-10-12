@@ -1322,88 +1322,38 @@ function HomePage() {
             </h2>
           </div>
 
-          <div
-            className="faq-list"
-            style={{
-              maxWidth: 900,
-              margin:
-                "45px auto 0",
-            }}
-          >
-            {FAQS.map(
-              (faq, index) => {
-                const isOpen =
-                  openFaq === index;
+          <div className="faq-list">
+            {FAQS.map((faq, index) => {
+              const isOpen = openFaq === index;
 
-                return (
-                  <div
-                    key={faq.question}
-                    className={`faq-item ${
-                      isOpen
-                        ? "faq-open"
-                        : ""
-                    }`}
+              return (
+                <article
+                  key={faq.question}
+                  className={`faq-item ${isOpen ? "faq-open" : ""}`}
+                >
+                  <button
+                    type="button"
+                    className="faq-question-button"
+                    aria-expanded={isOpen}
+                    onClick={() => setOpenFaq(isOpen ? null : index)}
                   >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setOpenFaq(
-                          isOpen
-                            ? null
-                            : index
-                        )
-                      }
-                      style={{
-                        width: "100%",
-                        display:
-                          "flex",
-                        justifyContent:
-                          "space-between",
-                        alignItems:
-                          "center",
-                        background:
-                          "transparent",
-                        border: 0,
-                        color:
-                          "inherit",
-                        cursor:
-                          "pointer",
-                        textAlign:
-                          "left",
-                        font:
-                          "inherit",
-                      }}
-                    >
-                      <span>
-                        {faq.question}
-                      </span>
+                    <span className="faq-index">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <span className="faq-question-text">
+                      {faq.question}
+                    </span>
+                    <span className="faq-toggle" aria-hidden="true">
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
 
-                      <span
-                        style={{
-                          fontSize: 22,
-                          opacity:
-                            0.65,
-                          transform:
-                            isOpen
-                              ? "rotate(45deg)"
-                              : "none",
-                          transition:
-                            "transform 180ms ease",
-                        }}
-                      >
-                        +
-                      </span>
-                    </button>
-
-                    {isOpen && (
-                      <p>
-                        {faq.answer}
-                      </p>
-                    )}
+                  <div className="faq-answer-wrap" hidden={!isOpen}>
+                    <p className="faq-answer">{faq.answer}</p>
                   </div>
-                );
-              }
-            )}
+                </article>
+              );
+            })}
           </div>
         </section>
       </main>
