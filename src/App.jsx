@@ -1220,6 +1220,7 @@ function HomePage() {
                   cursor: "pointer",
                   border: "none",
                   font: "inherit",
+                  color: "var(--silver-1)",
                 }}
               >
                 <div className="step-top">
