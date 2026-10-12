@@ -11,6 +11,7 @@ import { PDFDocument } from "pdf-lib";
 import { compressPDF } from "./utils/compressPDF";
 import { mergePDF } from "./utils/mergePDF";
 import { splitPDF } from "./utils/splitPDF";
+import PasswordProtectTool from "./PasswordProtectTool";
 
 import {
   inspectPDFMetadata,
@@ -3854,6 +3855,10 @@ export default function PDFWorkspace({
         </div>
       </section>
     );
+  }
+
+  if (mode === "password-protect") {
+    return <PasswordProtectTool />;
   }
 
   /* ------------------------------------------------------------
