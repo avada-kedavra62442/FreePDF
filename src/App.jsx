@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { TOOL_ROUTES } from "./config/routes";
+import { TOOL_ROUTES, ROUTE_TO_MODE, VALID_MODES } from "./config/routes";
 import { TOOLS, FAQS } from "./data/toolData";
-import { createPortal } from "react-dom";
-import {
-  FaGithub,
-  FaEnvelope,
-  FaLinkedin,
-} from "react-icons/fa";
-
+import Header from "./components/layout/Header";
+import Footer from "./components/layout/Footer";
+import ToolPage from "./components/pages/ToolPage";
+import InstallFreePDF from "./components/pwa/InstallFreePDF";
+import { navigate } from "./lib/navigation";
 import "./styles.css";
-import PDFWorkspace from "./PDFWorkspace";
 
 /* ============================================================
    FREEPDF ROUTING

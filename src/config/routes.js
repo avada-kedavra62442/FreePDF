@@ -10,13 +10,13 @@ export const TOOL_ROUTES = {
   metadata: "/metadata",
 };
 
-const ROUTE_TO_MODE = Object.fromEntries(
+export const ROUTE_TO_MODE = Object.fromEntries(
   Object.entries(TOOL_ROUTES).map(([mode, path]) => [
     path,
     mode,
   ])
 );
 
-const VALID_MODES = new Set(
+export const VALID_MODES = new Set(
   Object.keys(TOOL_ROUTES)
 );
