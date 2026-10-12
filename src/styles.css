@@ -1834,9 +1834,9 @@ a {
   }
 
   .brand-favicon {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
   display: block;
   object-fit: contain;
   border-radius: 10px;
