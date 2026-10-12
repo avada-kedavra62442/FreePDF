@@ -19,7 +19,8 @@ const TOOL_ROUTES = {
   split: "/split",
   compress: "/compress",
   "pdf-to-image": "/pdf-to-image",
-  "image-to-pdf": "/image-to-pdf",  sign: "/sign",
+  "image-to-pdf": "/image-to-pdf",
+  sign: "/sign",
   "password-protect": "/password-protect",
   metadata: "/metadata",
 };
