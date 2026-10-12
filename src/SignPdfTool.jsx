@@ -26,7 +26,7 @@ export default function SignPdfTool() {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState({ width: 595.28, height: 841.89 });
   const [signatureWidth, setSignatureWidth] = useState(150);
-  const [signatureHeight, setSignatureHeight] = useState(60);
+  const [signaturePreview, setSignaturePreview] = useState("");
   const [placement, setPlacement] = useState(null);
   const [drawing, setDrawing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -60,6 +60,7 @@ export default function SignPdfTool() {
       if (stroke.length === 1) ctx.lineTo(stroke[0].x + 0.1, stroke[0].y + 0.1);
       ctx.stroke();
     }
+    setSignaturePreview(canvas.toDataURL("image/png"));
   }, []);
 
   useEffect(() => { drawSignaturePad(); }, [drawSignaturePad]);
@@ -242,8 +243,6 @@ export default function SignPdfTool() {
     try { loadingTaskRef.current?.destroy(); } catch {}
   }, [result?.url]);
 
-  const signatureAspect = signatureHeight / 60;
-
   return (
     <section style={{ width: "min(1100px, calc(100% - 32px))", margin: "0 auto 90px", color: "#f3fff9" }}>
       <div style={{ ...panel, padding: "clamp(20px, 4vw, 36px)", marginBottom: 18 }}>
@@ -295,7 +294,7 @@ export default function SignPdfTool() {
           </div>
           {file ? <div style={{ position: "relative", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(220,235,229,.2)", background: "#ffffff", cursor: previewReady ? "crosshair" : "wait", lineHeight: 0 }} onClick={handlePreviewClick}>
             <canvas ref={previewCanvasRef} style={{ display: "block", width: "100%", height: "auto" }} />
-            {placement?.page === pageNumber && <div style={{ position: "absolute", left: `${placement.x * 100}%`, top: `${placement.y * 100}%`, transform: "translate(-50%, -50%)", width: `${Math.min(80, (signatureWidth / pageSize.width) * 100)}%`, aspectRatio: "3 / 1", display: "grid", placeItems: "center", border: "1px dashed rgba(23,121,76,.7)", background: "rgba(125,239,190,.12)", color: "#145638", font: "italic 19px Georgia, serif", pointerEvents: "none", whiteSpace: "nowrap" }}>Signature</div>}
+            {placement?.page === pageNumber && signaturePreview && <img src={signaturePreview} alt="Signature placement preview" style={{ position: "absolute", left: `${placement.x * 100}%`, top: `${placement.y * 100}%`, transform: "translate(-50%, -50%)", width: `${Math.min(80, (signatureWidth / pageSize.width) * 100)}%`, height: "auto", pointerEvents: "none", filter: "drop-shadow(0 1px 1px rgba(0,0,0,.08))" }} />}
           </div> : <div style={{ border: "1px dashed rgba(124,240,189,.28)", borderRadius: 14, minHeight: 240, display: "grid", placeItems: "center", padding: 20, textAlign: "center", ...muted }}>Upload a PDF to preview its page here.</div>}
           {file && <p style={{ ...muted, fontSize: 11, margin: "10px 0 0" }}>{placement?.page === pageNumber ? "Placement selected. You can click another spot to move it." : "Select a position on the page to place your signature."}</p>}
         </div>
