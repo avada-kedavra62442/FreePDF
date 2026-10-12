@@ -564,9 +564,10 @@ function GlassTimePicker({ value, onChange, disabled = false, ariaLabel = "Time"
   const triggerRef = useRef(null);
   const popupRef = useRef(null);
   const [position, setPosition] = useState({ top: 0, left: 16 });
-  const parts = /^([01]\\d|2[0-3]):([0-5]\\d)$/.exec(value || "");
-  const hour = parts ? Number(parts[1]) : 12;
-  const minute = parts ? Number(parts[2]) : 0;
+  const timeParts = (value || "").split(":");
+  const hasValidTimeParts = timeParts.length === 2 && timeParts.every((part) => part.length === 2 && Number.isFinite(Number(part)));
+  const hour = hasValidTimeParts ? Number(timeParts[0]) : 12;
+  const minute = hasValidTimeParts ? Number(timeParts[1]) : 0;
 
   useEffect(() => {
     if (!open) return;
