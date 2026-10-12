@@ -50,10 +50,8 @@ export default function PasswordProtectTool() {
   }, [result]);
 
   const clearResult = () => {
-    setResult((current) => {
-      if (current?.url) URL.revokeObjectURL(current.url);
-      return null;
-    });
+    if (result?.url) URL.revokeObjectURL(result.url);
+    setResult(null);
   };
 
   const chooseFile = (candidate) => {
