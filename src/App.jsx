@@ -202,16 +202,17 @@ function Header({
         <button
           className="brand"
           onClick={() => go("/")}
-          aria-label="FreeToolz home"
+          aria-label="FreePDF home"
         >
-          <span className="brand-mark">
-            <span className="brand-mark-inner">
-              F
-            </span>
-          </span>
+          <img
+            className="brand-favicon"
+            src="/favicon.svg"
+            alt=""
+            aria-hidden="true"
+          />
 
           <span className="brand-name">
-            Free<span>Toolz</span>
+            Free<span>PDF</span>
           </span>
         </button>
 
