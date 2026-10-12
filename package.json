@@ -19,7 +19,8 @@
     "lucide-react": "latest",
     "pdf-lib": "latest",
     "pdfstudio": "^0.4.0",
-    "@wasm-zoo/ghostscript": "latest"
+    "@wasm-zoo/ghostscript": "latest",
+    "jszip": "^3.10.1"
   },
   "devDependencies": {}
 }
