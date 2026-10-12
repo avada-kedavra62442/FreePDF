@@ -252,7 +252,7 @@ export default function SignPdfTool() {
         </div>
         <h2 style={{ margin: "0 0 10px", fontSize: "clamp(25px, 4vw, 38px)", letterSpacing: "-.045em" }}>Make it official. Sign your PDF.</h2>
         <p style={{ ...muted, margin: "0 0 24px", maxWidth: 720 }}>Draw your signature, choose where it belongs on the page, and download a signed copy. Your document stays in your browser.</p>
-        <button type="button" onClick={() => fileInputRef.current?.click()} style={{ ...secondary, width: "100%", minHeight: 130, borderStyle: "dashed", borderColor: file ? "rgba(124,240,189,.55)" : "rgba(124,240,189,.32)", background: "rgba(255,255,255,.018)" }}>
+        <button type="button" onClick={() => fileInputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); chooseFile(event.dataTransfer.files?.[0]); }} style={{ ...secondary, width: "100%", minHeight: 130, borderStyle: "dashed", borderColor: file ? "rgba(124,240,189,.55)" : "rgba(124,240,189,.32)", background: "rgba(255,255,255,.018)" }}>
           <span style={{ display: "block", color: "#83f2c1", fontSize: 27, marginBottom: 8 }}>↑</span>
           <span style={{ display: "block", fontSize: 15 }}>{file ? file.name : "Choose a PDF or drop it here"}</span>
           <span style={{ display: "block", ...muted, fontSize: 12, marginTop: 5 }}>{file ? `${pageCount} pages · ${sizeLabel(file.size)}` : "PDF documents · Multi-page files supported"}</span>
