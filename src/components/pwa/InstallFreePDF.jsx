@@ -1,149 +1,102 @@
-import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
+import { Download, Smartphone, X } from "lucide-react";
 
 export default function InstallFreePDF() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [promptEvent, setPromptEvent] = useState(null);
   const [installed, setInstalled] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
-
-  const isIOS =
-    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const [appleMobile, setAppleMobile] = useState(false);
 
   useEffect(() => {
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      window.navigator.standalone === true;
+    const ua = navigator.userAgent || "";
+    setAppleMobile(
+      /iPhone|iPad|iPod/i.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+    );
+    setInstalled(
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      navigator.standalone === true
+    );
 
-    setInstalled(standalone);
-
-    const handleBeforeInstallPrompt = (event) => {
+    const onPrompt = (event) => {
       event.preventDefault();
-      setDeferredPrompt(event);
+      setPromptEvent(event);
     };
-
-    const handleAppInstalled = () => {
+    const onInstalled = () => {
       setInstalled(true);
-      setDeferredPrompt(null);
+      setPromptEvent(null);
     };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
 
-  const install = async () => {
-    if (installed) return;
-
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const result = await deferredPrompt.userChoice;
-
-      if (result.outcome === "accepted") {
-        setInstalled(true);
-      }
-
-      setDeferredPrompt(null);
-      return;
-    }
-
-    setHelpOpen(true);
-  };
-
   if (installed) return null;
+
+  async function install() {
+    if (promptEvent) {
+      await promptEvent.prompt();
+      await promptEvent.userChoice;
+      setPromptEvent(null);
+    } else {
+      setHelpOpen(true);
+    }
+  }
 
   return (
     <>
       <button
+        className="install-app-button"
         type="button"
-        className="secondary-button"
         onClick={install}
-        title="Install FreePDF as an app"
+        aria-label="Install FreePDF"
       >
-        <span>Install FreePDF</span>
-        <span>＋</span>
+        {promptEvent ? <Download size={14} /> : <Smartphone size={14} />}
+        <span>Install</span>
       </button>
 
-      {helpOpen && createPortal(
+      {helpOpen && (
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Install FreePDF"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) setHelpOpen(false);
-          }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 1000,
-            display: "grid",
-            placeItems: "center",
-            padding: 24,
-            background: "rgba(0,0,0,0.68)",
-          }}
+          className="install-help-backdrop"
+          onClick={() => setHelpOpen(false)}
         >
-          <div
-            className="glass-panel"
-            style={{
-              width: "min(520px, 100%)",
-              padding: "30px 28px",
-              borderRadius: 24,
-              background: "linear-gradient(145deg, #182b25 0%, #0d1a16 100%)",
-              border: "1px solid rgba(167,221,199,0.22)",
-              boxShadow: "0 28px 80px rgba(0,0,0,0.5), 0 0 40px rgba(38,209,126,0.10)",
-            }}
+          <section
+            className="install-help"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-help-title"
+            onClick={(event) => event.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 18, alignItems: "flex-start" }}>
-              <div>
-                <span className="section-kicker">INSTALL FREEPDF</span>
-                <h3 style={{ margin: "10px 0 8px", fontSize: 28 }}>Make FreePDF an app.</h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setHelpOpen(false)}
-                aria-label="Close install instructions"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  border: "1px solid rgba(202,219,212,0.14)",
-                  background: "rgba(255,255,255,0.05)",
-                  color: "#edf6f2",
-                  cursor: "pointer",
-                  fontSize: 20,
-                }}
-              >
-                ×
-              </button>
-            </div>
-
-            {isIOS ? (
-              <p style={{ margin: "18px 0 0", lineHeight: 1.75, opacity: 0.78 }}>
-                In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong> and confirm. FreePDF will open from your Home Screen like an app.
-              </p>
-            ) : (
-              <p style={{ margin: "18px 0 0", lineHeight: 1.75, opacity: 0.78 }}>
-                Your browser does not currently expose the one-tap install prompt. Open the browser menu and choose <strong>Install FreePDF</strong>, <strong>Install app</strong>, or <strong>Add to Home screen</strong>.
-              </p>
-            )}
-
             <button
+              className="install-help-close"
               type="button"
-              className="primary-button"
               onClick={() => setHelpOpen(false)}
-              style={{ marginTop: 24 }}
+              aria-label="Close install instructions"
             >
-              Got it
-              <span>✓</span>
+              <X size={17} />
             </button>
-          </div>
-        </div>,
-        document.body
+            <div className="install-help-icon"><Smartphone size={22} /></div>
+            <h2 id="install-help-title">Install FreePDF</h2>
+            {appleMobile ? (
+              <ol>
+                <li>Open this site in <strong>Safari</strong>.</li>
+                <li>Tap the <strong>Share</strong> icon.</li>
+                <li>Choose <strong>Add to Home Screen</strong>, then tap <strong>Add</strong>.</li>
+              </ol>
+            ) : (
+              <ol>
+                <li>Open FreePDF in Chrome or a supported browser.</li>
+                <li>Open the browser menu.</li>
+                <li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li>
+              </ol>
+            )}
+            <p>The app shell can open from your home screen. PDF processing features may need internet access depending on the tool.</p>
+          </section>
+        </div>
       )}
     </>
   );
