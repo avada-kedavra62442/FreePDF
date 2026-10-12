@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { PDFDocument } from "pdf-lib";
 
 import { compressPDF } from "./utils/compressPDF";
@@ -613,22 +614,54 @@ function GlassDatePicker({
   });
 
   const pickerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const popupRef = useRef(null);
+  const [popupPosition, setPopupPosition] = useState({
+    top: 0,
+    left: 20,
+  });
 
   useEffect(() => {
     if (!open) return;
 
+    const updatePopupPosition = () => {
+      const anchor = triggerRef.current;
+      if (!anchor) return;
+
+      const rect = anchor.getBoundingClientRect();
+      const popupWidth = Math.min(318, window.innerWidth - 40);
+      const popupHeight = 360;
+      const left = Math.max(
+        20,
+        Math.min(rect.left, window.innerWidth - popupWidth - 20)
+      );
+      const top =
+        rect.bottom + 9 + popupHeight > window.innerHeight
+          ? Math.max(12, rect.top - popupHeight - 9)
+          : rect.bottom + 9;
+
+      setPopupPosition({ top, left });
+    };
+
     const handlePointerDown = (event) => {
-      if (!pickerRef.current?.contains(event.target)) {
+      if (
+        !pickerRef.current?.contains(event.target) &&
+        !popupRef.current?.contains(event.target)
+      ) {
         setOpen(false);
       }
     };
 
+    updatePopupPosition();
     document.addEventListener("pointerdown", handlePointerDown);
-    return () =>
-      document.removeEventListener(
-        "pointerdown",
-        handlePointerDown
-      );
+    window.addEventListener("resize", updatePopupPosition);
+    window.addEventListener("scroll", updatePopupPosition, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("resize", updatePopupPosition);
+      window.removeEventListener("scroll", updatePopupPosition, true);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -735,6 +768,7 @@ function GlassDatePicker({
       }}
     >
       <button
+        ref={triggerRef}
         type="button"
         disabled={disabled}
         aria-label={ariaLabel}
@@ -800,15 +834,16 @@ function GlassDatePicker({
         </span>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
+          ref={popupRef}
           role="dialog"
           aria-label={`${ariaLabel} calendar`}
           style={{
-            position: "absolute",
+            position: "fixed",
             zIndex: 2147483000,
-            top: "calc(100% + 9px)",
-            left: 0,
+            top: popupPosition.top,
+            left: popupPosition.left,
             width: "min(318px, calc(100vw - 40px))",
             padding: 14,
             borderRadius: 17,
@@ -1057,7 +1092,8 @@ function GlassDatePicker({
               Clear
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
