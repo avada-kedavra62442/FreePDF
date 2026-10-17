@@ -58,7 +58,7 @@ export default function HomePage() {
                 }
               >
                 <span>
-                  Get started
+                  Explore PDF tools
                 </span>
 
                 <span>↗</span>
