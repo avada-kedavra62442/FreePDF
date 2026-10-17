@@ -46,7 +46,7 @@ export default function HomePage() {
 
             <p className="hero-description">
               Merge, split, compress and transform
-              your PDFs with a focused workspace
+              your PDFs with a focused tool page
               built to get the job done.
             </p>
 
@@ -54,7 +54,7 @@ export default function HomePage() {
               <button
                 className="primary-button"
                 onClick={() =>
-                  navigate("/workspace")
+                  navigate("/tool page")
                 }
               >
                 <span>
